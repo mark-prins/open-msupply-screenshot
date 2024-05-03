@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "selenium-webdriver": "^4.20.0"
+  },
+  "scripts": {
+    "shoot": "node --experimental-json-modules index.js"
+  },
+  "name": "hotshot",
+  "version": "1.0.0",
+  "description": "Simple screenshot application",
+  "main": "index.js",
+  "author": "The mSupply Foundation",
+  "license": "MIT",
+  "type": "module"
+}

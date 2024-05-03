@@ -1,0 +1,18 @@
+{
+  "baseUrl": "http://localhost:3003",
+  "login": {
+    "url": "/login",
+    "username": "Mark",
+    "password": "mpmp"
+  },
+  "screenshots": [
+    {
+      "filename": "outbound-shipment-list-view",
+      "url": "/distribution/outbound-shipment?sort=invoiceNumber&dir=desc"
+    },
+    {
+      "filename": "outbound-shipment-detail-view",
+      "url": "/distribution/outbound-shipment/5?sort=itemName"
+    }
+  ]
+}
