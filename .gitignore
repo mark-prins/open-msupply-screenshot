@@ -1,3 +1,6 @@
-**/.DS_Store
-images/*
-node_modules/*
+node_modules/
+images/*.png
+shots/generated/
+.auth/
+.DS_Store
+package-lock.json

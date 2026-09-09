@@ -1,0 +1,80 @@
+# Shot definition schema.
+#
+# Every *.yaml in this directory is loaded. `defaults` is merged into each shot
+# in the same file. This file starts with an underscore and defines no shots, so
+# it is inert - it is here as the reference.
+
+defaults:
+  store: STR-BDR-DST # store code from `yarn stores`; picks which store to open
+  tags: []
+
+shots: []
+
+# ---------------------------------------------------------------------------
+# id            required. Unique. Becomes the output filename: <id>.<lang>.png
+#
+# file          path, relative to config.docsRoot, of the image in the docs
+#               repo. Required for `--in-place`. Copy it from
+#               msupply_docs/screenshots/manifest.yaml.
+#
+# route         required. Store-scoped route without the store id, e.g.
+#               "distribution/outbound-shipment". The runner prefixes
+#               /{storeId}/ automatically.
+#
+# store         store code to open this shot in. Needed because /dispensary/*
+#               only exists in a dispensary-mode store and /manage/*,
+#               /programs/* only exist on the central server.
+#
+# region        required. One of the regions in src/regions.js:
+#                 full content content-top detail-header tab footer footer-app
+#                 nav nav-part panel panel-part modal modal-part menu toast
+#                 control
+#               Regions with no built-in selector (nav-part, panel-part,
+#               modal-part, control) need `clip`.
+#
+# clip          selector override. Wins over the region's default selector.
+#
+# pad           px of breathing room around the clip. Defaults to 24 when the
+#               shot has annotations, 0 otherwise.
+#
+# fullPage      capture the scrollable page rather than the viewport.
+#
+# openFirstRow  open the first row of the list before capturing. Use this
+#               instead of hard-coding a record id, which will not survive a
+#               database refresh.
+#
+# steps         interactions to run before capturing. See src/steps.js:
+#                 - click: '[data-testid="..."]'
+#                 - hover: '[data-testid="..."]'
+#                 - fill: {selector: '...', text: '...'}
+#                 - select: {selector: '...', option: '[data-testid="..."]'}
+#                 - check: '...'
+#                 - press: Escape
+#                 - waitFor: 'dialog[open]'
+#                 - waitForHidden: '...'
+#                 - wait: 400
+#                 - scrollTo: '...'
+#                 - openDetailPanel: true
+#                 - selectRows: 2
+#               Use test ids, not visible text - the same steps have to replay
+#               in French, Spanish and Portuguese.
+#
+# annotate      arrows, rings and callouts, anchored to selectors so they
+#               follow the control when the app changes or the label is
+#               translated. See src/annotate.js:
+#                 - type: arrow    to: <selector>  from: below-left  length: 110
+#                                  text: 'optional caption at the tail'
+#                 - type: ring     around: <selector>  pad: 6
+#                 - type: box      around: <selector>  radius: 6
+#                 - type: label    at: <selector>  from: above  text: '...'
+#                 - type: number   at: <selector>  index: 1
+#               `from` is one of: left right above below above-left above-right
+#               below-left below-right
+#
+# masks         selectors to black out. Defaults to the sync status, whose
+#               "Synced just now" text changes every run.
+# noMask        true to disable the default masks - use when the shot is *of*
+#               the footer sync widget.
+#
+# capture       set to "manual" to skip: photos, diagrams, icon assets, the
+#               Android app, legacy mSupply desktop, mSupply Dashboard.
