@@ -1,18 +1,18 @@
 {
-  "baseUrl": "http://localhost:3003",
-  "login": {
-    "url": "/login",
-    "username": "Mark",
-    "password": "mpmp"
+  "baseUrl": "https://release-demo-open.msupply.org",
+  "centralUrl": "https://release-demo-open.msupply.org:8888",
+  "docsRoot": "../msupply_docs",
+  "languages": ["en", "fr", "es", "pt"],
+  "viewport": { "width": 1440, "height": 900 },
+  "deviceScaleFactor": 2,
+  "annotationStyle": {
+    "colour": "#e35f2a",
+    "width": 4,
+    "fontSize": 17
   },
-  "screenshots": [
-    {
-      "filename": "outbound-shipment-list-view",
-      "url": "/distribution/outbound-shipment?sort=invoiceNumber&dir=desc"
-    },
-    {
-      "filename": "outbound-shipment-detail-view",
-      "url": "/distribution/outbound-shipment/5?sort=itemName"
-    }
-  ]
+  "stores": {
+    "remote": "STR-BDR-DST",
+    "dispensary": "STR-BDR-HCC",
+    "epi": "STR-BDR-EPI"
+  }
 }

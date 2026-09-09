@@ -1,0 +1,179 @@
+# Outbound shipments.
+#
+# A worked set covering every region type and every annotation type, using the
+# test ids verified on the demo. Use it as the pattern for the rest of the
+# catalogue in ../msupply_docs/screenshots/manifest.yaml.
+
+defaults:
+  store: STR-BDR-DST # remote site; dispensary shots need STR-BDR-HCC
+  tags: [distribution]
+
+shots:
+  # --- nav ------------------------------------------------------------------
+  - id: outbound-goto
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/gotoos2.png
+    route: distribution/outbound-shipment
+    region: nav
+    annotate:
+      - type: arrow
+        to: '[data-testid="nav-distribution"]'
+        from: right
+        length: 120
+
+  # --- list view ------------------------------------------------------------
+  - id: outbound-list
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_list.png
+    route: distribution/outbound-shipment
+    region: content
+
+  - id: outbound-new-shipment-button
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_click_new_shipment.png
+    route: distribution/outbound-shipment
+    region: content-top
+    annotate:
+      - type: arrow
+        to: '[data-testid="new-shipment-button"]'
+        from: below-left
+        length: 100
+
+  - id: outbound-filter-menu
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_filter.png
+    route: distribution/outbound-shipment
+    region: menu
+    pad: 8
+    steps:
+      - click: '[data-testid="filters-menu"]'
+      - waitFor: '[role="menu"], [popover]:popover-open'
+
+  - id: outbound-export-button
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/export.png
+    route: distribution/outbound-shipment
+    region: control
+    clip: '[data-testid="export-csv-main"]'
+    pad: 10
+
+  - id: outbound-list-delete
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/delete-outbound-shipment.png
+    route: distribution/outbound-shipment
+    region: full
+    steps:
+      - selectRows: 2
+
+  # --- detail view ----------------------------------------------------------
+  - id: outbound-detail
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_created.png
+    route: distribution/outbound-shipment
+    region: full
+    openFirstRow: true
+
+  - id: outbound-detail-header
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_change_customer.png
+    route: distribution/outbound-shipment
+    region: detail-header
+    openFirstRow: true
+    pad: 6
+
+  - id: outbound-status-crumbs
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_statussequence2.png
+    route: distribution/outbound-shipment
+    region: footer
+    openFirstRow: true
+
+  - id: outbound-status-history-hover
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_statussequence_hover.png
+    route: distribution/outbound-shipment
+    region: footer
+    openFirstRow: true
+    pad: 180 # the hover card floats above the crumb bar
+    steps:
+      - hover: '[data-testid="status-crumbs"]'
+      - wait: 400
+
+  - id: outbound-confirm-dropdown
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_confirmbutton_skipstatuses.png
+    route: distribution/outbound-shipment
+    region: menu
+    openFirstRow: true
+    pad: 8
+    steps:
+      - click: '[data-testid="status-change-button-dropdown"]'
+      - waitFor: '[role="menu"]'
+
+  - id: outbound-add-item-button
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/additembutton.png
+    route: distribution/outbound-shipment
+    region: control
+    openFirstRow: true
+    clip: '[data-testid="add-item-button"]'
+    pad: 10
+    annotate:
+      - type: ring
+        around: '[data-testid="add-item-button"]'
+
+  - id: outbound-add-item-modal
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_additem.png
+    route: distribution/outbound-shipment
+    region: modal
+    openFirstRow: true
+    steps:
+      - click: '[data-testid="add-item-button"]'
+      - waitFor: 'dialog[open]'
+
+  - id: outbound-add-item-search
+    file: content/docs/images/adding-an-item-name.png
+    route: distribution/outbound-shipment
+    region: modal
+    openFirstRow: true
+    steps:
+      - click: '[data-testid="add-item-button"]'
+      - waitFor: 'dialog[open]'
+      - click: '[data-testid="item-search-input"]'
+      - wait: 500
+    annotate:
+      - type: arrow
+        to: '[data-testid="item-search-input"]'
+        from: above-right
+        length: 90
+        text: Start typing to filter by name
+
+  - id: outbound-detail-panel
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_infopanel.png
+    route: distribution/outbound-shipment
+    region: panel
+    openFirstRow: true
+    steps:
+      - openDetailPanel: true
+
+  - id: outbound-panel-actions
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_actions.png
+    route: distribution/outbound-shipment
+    region: panel-part
+    clip: '[data-testid="panel-section-actions"]'
+    openFirstRow: true
+    steps:
+      - openDetailPanel: true
+
+  - id: outbound-tabs
+    file: content/docs/distribution/outbound-shipments/outbound-shipments/images/os_tabs.png
+    route: distribution/outbound-shipment
+    region: tab
+    openFirstRow: true
+    pad: 4
+
+  # --- app chrome shared across pages --------------------------------------
+  - id: app-footer
+    file: content/docs/getting-started/tutorial/images/footer.png
+    route: distribution/outbound-shipment
+    region: footer-app
+    tags: [distribution, shared]
+    noMask: true
+    pad: 4
+    annotate:
+      - type: label
+        at: '[data-testid="store-selector-trigger"]'
+        from: above
+        text: Current store
+      - type: label
+        at: '[data-testid="user-menu-trigger"]'
+        from: above
+        text: Current user
