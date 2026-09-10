@@ -164,14 +164,36 @@ runner resolves the id from the store code. Which store matters:
 - `clearOverlays` dismisses the unexpected-error modal and the "A new version is
   available" stale-bundle modal, both of which appear unprompted on the demos.
 
+## Troubleshooting
+
+**`Login did not complete: <message>`**
+The server rejected the credentials, and `<message>` is its own wording (e.g.
+"Invalid credentials"). Fix `OMS_USERNAME` / `OMS_PASSWORD`.
+
+**`Bounced back to the login page at .../resolve-store`**
+Login was skipped or silently failed. This should no longer happen - if it does,
+run with `--headed` and watch whether the form is filled in.
+
+**`Neither a login form nor a signed-in view appeared`**
+The server did not render within 30s. Check it is up and `OMS_URL` is right.
+
+**`Store "STR-..." is not available to this user`**
+Run `yarn stores` to see the codes this account can actually open, and fix the
+`store:` field on the shot.
+
+**`This shot needs the "central" server but config.json has no centralUrl`**
+Shots under `/manage/*`, `/programs/*` and `/replenishment/purchase-order` carry
+`server: central`. Set `centralUrl` in `config.json`.
+
+**`All N matching shots are unavailable: ... pending review`**
+The shots exist but the importer left `clip:` or `annotate:` as `TODO`. Fill
+those in, or pick a different filter. `yarn shot-list` lists what is pending.
+
 ## Known gaps
 
 - **The `toast` selector is unverified.** No toast container exists in the DOM
   until one fires and none could be triggered during the walk. `src/regions.js`
   carries a candidate list; confirm it against a real toast and prune.
-- **The login form has no test ids**, so login uses accessible locators
-  (`getByLabel(/username/i)`). Adding test ids to the login form would make this
-  sturdier.
 - **Non-English in-place writing is refused.** Translated docs pages reuse the
   English image files, so writing a French capture over one would break the
   English page. Non-English runs go to `--out-dir` until the docs adopt

@@ -54,16 +54,35 @@ async function loadConfig(file) {
   return cfg;
 }
 
-async function loadShots(dir) {
-  const files = (await fs.readdir(dir)).filter((f) => /\.ya?ml$/.test(f));
+/**
+ * Load every *.yaml under shots/, including shots/generated/ - the importer
+ * writes there and those shots are usable as soon as they need no `clip`.
+ */
+async function loadShots(dir, base = dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
   const shots = [];
-  for (const f of files) {
-    const doc = YAML.parse(await fs.readFile(path.join(dir, f), 'utf8'));
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      shots.push(...(await loadShots(full, base)));
+      continue;
+    }
+    if (!/\.ya?ml$/.test(entry.name) || entry.name.startsWith('_')) continue;
+    const doc = YAML.parse(await fs.readFile(full, 'utf8'));
     for (const shot of doc.shots ?? []) {
-      shots.push({ ...doc.defaults, ...shot, source: f });
+      shots.push({ ...doc.defaults, ...shot, source: path.relative(base, full) });
     }
   }
   return shots;
+}
+
+/** A shot the importer left for a human: `clip: "TODO # ..."`. */
+function pendingReview(shot) {
+  const todo = (v) => typeof v === 'string' && v.trimStart().startsWith('TODO');
+  if (todo(shot.clip)) return 'needs a clip selector';
+  if (todo(shot.annotate)) return 'needs annotation coordinates';
+  if (shot.annotate != null && !Array.isArray(shot.annotate)) return 'annotate must be a list';
+  return null;
 }
 
 async function main() {
@@ -72,16 +91,64 @@ async function main() {
   const outDir = args.outDir ?? path.join(ROOT, 'images');
   const languages = args.lang ? [args.lang] : cfg.languages ?? DOC_LANGUAGES;
 
-  let shots = await loadShots(path.join(ROOT, 'shots'));
-  if (args.only) shots = shots.filter((s) => s.id.includes(args.only));
+  const all = await loadShots(path.join(ROOT, 'shots'));
+  let shots = all;
+  if (args.only) shots = shots.filter((s) => s.id.includes(args.only) || s.source.includes(args.only));
   if (args.tag) shots = shots.filter((s) => (s.tags ?? []).includes(args.tag));
 
+  const matched = shots.length;
   const skipped = shots.filter((s) => SKIP_REGIONS.has(s.region) || s.capture === 'manual');
   shots = shots.filter((s) => !SKIP_REGIONS.has(s.region) && s.capture !== 'manual');
 
+  const pending = shots.map((s) => [s, pendingReview(s)]).filter(([, r]) => r);
+  shots = shots.filter((s) => !pendingReview(s));
+
   if (args.list) {
     for (const s of shots) console.log(`${s.id.padEnd(44)} ${s.region.padEnd(14)} ${s.route}`);
-    console.log(`\n${shots.length} shots, ${skipped.length} skipped (not a web-client screen)`);
+    console.log(
+      `\n${shots.length} ready, ${pending.length} pending review, ` +
+        `${skipped.length} skipped (not a web-client screen)`
+    );
+    if (pending.length) {
+      console.log('\nPending review:');
+      for (const [s, reason] of pending.slice(0, 20)) {
+        console.log(`  ${s.id.padEnd(44)} ${reason}`);
+      }
+      if (pending.length > 20) console.log(`  ... and ${pending.length - 20} more`);
+    }
+    return;
+  }
+
+  // Fail fast and clearly rather than launching a browser and logging in to
+  // discover there is nothing to do.
+  if (!matched) {
+    const filter = args.only ? `--only ${args.only}` : args.tag ? `--tag ${args.tag}` : 'no filter';
+    console.error(`No shots matched (${filter}). ${all.length} shots are defined; try \`yarn shot-list\`.`);
+    process.exitCode = 1;
+    return;
+  }
+  if (!shots.length) {
+    console.error(
+      `All ${matched} matching shots are unavailable: ` +
+        `${pending.length} pending review, ${skipped.length} not a web-client screen.`
+    );
+    if (pending.length) {
+      console.error('\nPending review:');
+      for (const [s, reason] of pending) console.error(`  ${s.id.padEnd(44)} ${reason}`);
+      console.error('\nFill in the TODO fields in shots/generated/, or promote them into shots/.');
+    }
+    process.exitCode = 1;
+    return;
+  }
+
+  if (!cfg.username || !cfg.password) {
+    console.error(
+      'Missing credentials. Set them in the environment before running:\n' +
+        '  export OMS_USERNAME=Documentation\n' +
+        '  export OMS_PASSWORD=...\n' +
+        `  export OMS_URL=${cfg.baseUrl}   # optional, overrides config.json`
+    );
+    process.exitCode = 1;
     return;
   }
 
@@ -94,32 +161,60 @@ async function main() {
   const results = { ok: 0, failed: [], skipped: skipped.length };
 
   try {
-    await login(page, cfg);
+    // A shot names the server it needs ("remote" by default, "central" for
+    // /manage/*, /programs/* and purchase orders) and optionally a store code
+    // (/dispensary/* needs a dispensary-mode store). Both are resolved lazily
+    // and cached: cookies are per-origin, so logging in to both servers in one
+    // context lets us switch between them freely.
+    const serverUrl = (name) => {
+      const url = name === 'central' ? cfg.centralUrl : cfg.baseUrl;
+      if (!url) {
+        throw new Error(
+          `This shot needs the "${name}" server but config.json has no ` +
+            `${name === 'central' ? 'centralUrl' : 'baseUrl'}.`
+        );
+      }
+      return url;
+    };
+    const loggedIn = new Set();
+    const useServer = async (name) => {
+      const baseUrl = serverUrl(name);
+      if (!loggedIn.has(name)) {
+        await login(page, { ...cfg, baseUrl });
+        loggedIn.add(name);
+      }
+      return baseUrl;
+    };
 
-    // Shots are grouped by the store they need: a dispensary store for
-    // /dispensary/*, the central server for /manage/* and /programs/*.
     const storeIds = new Map();
-    const storeFor = async (code) => {
-      const key = code ?? '__default__';
-      if (!storeIds.has(key)) storeIds.set(key, await resolveStore(page, { ...cfg, storeCode: code }));
+    const storeFor = async (server, code) => {
+      const key = `${server}:${code ?? '__default__'}`;
+      if (!storeIds.has(key)) {
+        const baseUrl = await useServer(server);
+        storeIds.set(key, await resolveStore(page, { ...cfg, baseUrl, storeCode: code }));
+      }
       return storeIds.get(key);
     };
 
     for (const language of languages) {
-      const firstStore = await storeFor(shots[0]?.store);
-      await setLanguage(page, { ...cfg, storeId: firstStore, language });
+      const first = shots[0];
+      const firstServer = first?.server ?? 'remote';
+      const firstStore = await storeFor(firstServer, first?.store);
+      await setLanguage(page, { ...cfg, baseUrl: serverUrl(firstServer), storeId: firstStore, language });
 
       for (const shot of shots) {
         const label = `${shot.id} [${language}]`;
         try {
-          const storeId = await storeFor(shot.store);
-          await gotoRoute(page, { ...cfg, storeId, route: shot.route });
+          const server = shot.server ?? 'remote';
+          const baseUrl = await useServer(server);
+          const storeId = await storeFor(server, shot.store);
+          await gotoRoute(page, { ...cfg, baseUrl, storeId, route: shot.route });
           await clearOverlays(page);
 
           if (shot.openFirstRow) await openFirstRow(page);
           if (shot.steps) await runSteps(page, shot.steps);
 
-          if (shot.annotate) {
+          if (Array.isArray(shot.annotate)) {
             await drawAnnotations(page, shot.annotate, cfg.annotationStyle);
           }
 
@@ -134,7 +229,7 @@ async function main() {
           await capture(page, {
             outFile,
             clipSelector: resolveClip(shot),
-            pad: shot.pad ?? (shot.annotate ? 24 : 0),
+            pad: shot.pad ?? (Array.isArray(shot.annotate) ? 24 : 0),
             masks: shot.masks ?? (shot.noMask ? [] : DEFAULT_MASKS),
             fullPage: shot.fullPage ?? false,
           });

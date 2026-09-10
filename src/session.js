@@ -28,23 +28,43 @@ export async function launch({ headed = false, viewport, deviceScaleFactor }) {
     locale: 'en-GB',
     timezoneId: 'Pacific/Auckland',
   });
+  // Kill animations and the text caret on EVERY document.
+  //
+  // `page.addStyleTag` was wrong here: there is no document yet on a fresh
+  // context, so it threw and was swallowed, and it would not have survived a
+  // navigation anyway. An init script runs before each document loads.
+  await context.addInitScript(() => {
+    const apply = () => {
+      const style = document.createElement('style');
+      style.textContent = `*, *::before, *::after {
+        transition-duration: 0s !important;
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
+        animation-iteration-count: 1 !important;
+        caret-color: transparent !important;
+        scroll-behavior: auto !important;
+      }`;
+      document.head?.appendChild(style);
+    };
+    if (document.head) apply();
+    else document.addEventListener('DOMContentLoaded', apply, { once: true });
+  });
+
   const page = await context.newPage();
-  await page.addStyleTag({
-    content: `*, *::before, *::after {
-      transition-duration: 0s !important;
-      animation-duration: 0s !important;
-      animation-delay: 0s !important;
-      caret-color: transparent !important;
-    }`,
-  }).catch(() => {}); // no document yet on a fresh context; re-applied per navigation
   return { browser, context, page };
 }
 
 /**
  * Log in. Credentials come from the environment, never from config on disk.
  *
- * The login form has no test ids, so this uses accessible locators. If test ids
- * are added to the client later, prefer them.
+ * Selectors confirmed against the live login page:
+ *   [data-testid="login-username-input"]
+ *   [data-testid="login-password-input"]
+ *   [data-testid="login-button"]
+ *
+ * Accessible locators are kept as a fallback, but note that
+ * `getByLabel(/password/i)` matches TWO elements - the field and the
+ * show/hide-password toggle button next to it - so it must not be used alone.
  */
 export async function login(page, { baseUrl, username, password }) {
   if (!username || !password) {
@@ -54,26 +74,77 @@ export async function login(page, { baseUrl, username, password }) {
   }
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
 
-  // Already signed in? The client bounces straight to store resolution.
-  if (await isAuthenticated(page)) return;
+  const user = page
+    .locator('[data-testid="login-username-input"], input[name="username"]')
+    .first();
+  const pass = page
+    .locator('[data-testid="login-password-input"], input[type="password"]')
+    .first();
+  const submit = page.locator('[data-testid="login-button"]').or(
+    page.getByRole('button', { name: /log ?in/i })
+  ).first();
+  const authed = page
+    .locator('[data-testid="drawer"], [data-testid^="store-select-option-"]')
+    .first();
 
-  const user = page.getByLabel(/username/i).or(page.locator('input[name="username"]')).first();
-  const pass = page.getByLabel(/password/i).or(page.locator('input[type="password"]')).first();
-  await user.waitFor({ state: 'visible', timeout: 15000 });
+  // Wait for the SPA to render EITHER the login form or an already-signed-in
+  // view, and decide from whichever appears.
+  //
+  // Do not ask "is the login button missing?" - `isVisible()` reports the
+  // current DOM without auto-waiting, and at `domcontentloaded` React has not
+  // rendered anything yet. That read always came back "no login button", so
+  // login concluded it was already signed in and returned without ever
+  // filling the form; the failure then surfaced at /resolve-store.
+  let state;
+  try {
+    state = await Promise.any([
+      user.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'form'),
+      authed.waitFor({ state: 'visible', timeout: 30000 }).then(() => 'authenticated'),
+    ]);
+  } catch {
+    throw new Error(
+      `Neither a login form nor a signed-in view appeared at ${baseUrl} within 30s. ` +
+        `Is the server up and is OMS_URL correct?`
+    );
+  }
+  if (state === 'authenticated') return;
+
   await user.fill(username);
   await pass.fill(password);
-  await page.getByRole('button', { name: /log ?in/i }).click();
+  await submit.click();
 
-  await page.waitForURL((url) => !/\/login\b/.test(url.pathname), { timeout: 20000 });
+  // Wait for a POSITIVE signal that we are in.
+  //
+  // Do not test the URL for "/login": the client serves the login page from
+  // the ROOT path, so any "not on /login" predicate is already true while the
+  // form is still on screen. That silently let the run continue unauthenticated
+  // and the failure surfaced much later, as a timeout waiting for store
+  // options on /resolve-store.
+  try {
+    await Promise.any([
+      page.locator('[data-testid^="store-select-option-"]').first().waitFor({ state: 'visible', timeout: 30000 }),
+      page.locator('[data-testid="drawer"]').waitFor({ state: 'visible', timeout: 30000 }),
+      page.waitForURL(/\/[0-9A-F]{32}(\/|$)/i, { timeout: 30000 }),
+    ]);
+  } catch {
+    const message = await readLoginError(page);
+    throw new Error(
+      `Login did not complete${message ? `: ${message}` : ''}.\n` +
+        `  Check OMS_USERNAME and OMS_PASSWORD, and that OMS_URL points at the right server.\n` +
+        `  Currently: OMS_URL=${baseUrl} OMS_USERNAME=${username}`
+    );
+  }
 }
 
-async function isAuthenticated(page) {
-  const onLogin = await page
-    .getByRole('button', { name: /log ?in/i })
-    .isVisible()
-    .catch(() => false);
-  return !onLogin;
+/** Surface "Invalid username or password" rather than a bare timeout. */
+async function readLoginError(page) {
+  for (const selector of ['[role="alert"]', '[class*="error" i]', '[class*="helper" i]']) {
+    const text = await page.locator(selector).first().innerText().catch(() => null);
+    if (text?.trim()) return text.trim().replace(/\s+/g, ' ').slice(0, 200);
+  }
+  return null;
 }
+
 
 /**
  * Pick a store and return its id. The id is the first path segment of every
@@ -84,11 +155,39 @@ async function isAuthenticated(page) {
 export async function resolveStore(page, { baseUrl, storeCode }) {
   await page.goto(`${baseUrl}/resolve-store`, { waitUntil: 'domcontentloaded' });
 
+  // If the user has ticked "Always open the store I pick", /resolve-store
+  // redirects straight into that store and never renders the picker. Take the
+  // id from the URL - unless a specific store was asked for, in which case we
+  // still need the picker.
+  if (!storeCode) {
+    const redirected = await page
+      .waitForURL(/\/[0-9A-F]{32}(\/|$)/i, { timeout: 4000 })
+      .then(() => true)
+      .catch(() => false);
+    if (redirected) return new URL(page.url()).pathname.split('/')[1];
+  }
+
   const option = storeCode
     ? page.locator(`[data-testid="store-select-option-${storeCode}"]`)
     : page.locator('[data-testid^="store-select-option-"]').first();
 
-  await option.waitFor({ state: 'visible', timeout: 15000 });
+  try {
+    await option.waitFor({ state: 'visible', timeout: 15000 });
+  } catch {
+    // Two very different causes land here, so say which.
+    if (await page.getByRole('button', { name: /log ?in/i }).isVisible().catch(() => false)) {
+      throw new Error(
+        `Bounced back to the login page at ${baseUrl}/resolve-store - the session is not authenticated.`
+      );
+    }
+    const available = await listStoreCodes(page);
+    throw new Error(
+      storeCode
+        ? `Store "${storeCode}" is not available to this user on ${baseUrl}.` +
+          (available.length ? ` Available: ${available.join(', ')}` : ' No stores offered.')
+        : `No stores offered to this user on ${baseUrl}.`
+    );
+  }
   await option.click();
 
   await page.waitForURL(/\/[0-9A-F]{32}(\/|$)/i, { timeout: 20000 });
@@ -97,7 +196,17 @@ export async function resolveStore(page, { baseUrl, storeCode }) {
   return storeId;
 }
 
-/** List the stores offered on the resolve-store screen, for `list-stores`. */
+/** Codes currently on screen, without navigating. Used in error messages. */
+async function listStoreCodes(page) {
+  return page
+    .locator('[data-testid^="store-select-option-"]')
+    .evaluateAll((els) =>
+      els.map((el) => el.getAttribute('data-testid').replace('store-select-option-', ''))
+    )
+    .catch(() => []);
+}
+
+/** List the stores offered on the resolve-store screen, for `yarn stores`. */
 export async function listStores(page, { baseUrl }) {
   await page.goto(`${baseUrl}/resolve-store`, { waitUntil: 'domcontentloaded' });
   await page.locator('[data-testid^="store-select-option-"]').first().waitFor({ timeout: 15000 });

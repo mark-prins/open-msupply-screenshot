@@ -25,7 +25,7 @@ const CENTRAL_PREFIXES = ['/manage/', '/programs/', '/catalogue/assets/log-reaso
 const CENTRAL_EXACT = ['/replenishment/purchase-order', '/replenishment/inbound-shipment-external'];
 const DISPENSARY_PREFIX = '/dispensary/';
 
-const STORES = { remote: 'STR-BDR-DST', dispensary: 'STR-BDR-HCC', central: 'CENTRAL' };
+const STORES = { remote: 'STR-BDR-DST', dispensary: 'STR-BDR-HCC' };
 
 /** Regions that always need a hand-written `clip`. */
 const NEEDS_CLIP = new Set(['nav-part', 'panel-part', 'modal-part', 'control', 'content-part']);
@@ -33,12 +33,19 @@ const NEEDS_CLIP = new Set(['nav-part', 'panel-part', 'modal-part', 'control', '
 /** Routes that are not reachable in the web client at all. */
 const NOT_A_ROUTE = new Set(['*', '-', 'dashboard', 'android']);
 
+/**
+ * Which server and store a route needs.
+ *
+ * The central-only routes are not a different STORE, they are a different
+ * SERVER - on a remote site they redirect to the Dashboard. The central
+ * server offers one store, so no code is needed there.
+ */
 function classify(route) {
   if (NOT_A_ROUTE.has(route)) return { skip: true };
-  if (route.startsWith(DISPENSARY_PREFIX)) return { store: STORES.dispensary };
-  if (CENTRAL_EXACT.some((r) => route.startsWith(r))) return { store: STORES.central };
-  if (CENTRAL_PREFIXES.some((p) => route.startsWith(p))) return { store: STORES.central };
-  return { store: STORES.remote };
+  if (route.startsWith(DISPENSARY_PREFIX)) return { server: 'remote', store: STORES.dispensary };
+  if (CENTRAL_EXACT.some((r) => route.startsWith(r))) return { server: 'central' };
+  if (CENTRAL_PREFIXES.some((p) => route.startsWith(p))) return { server: 'central' };
+  return { server: 'remote', store: STORES.remote };
 }
 
 /** "/distribution/outbound-shipment/{id}" -> {route, openFirstRow} */
@@ -78,8 +85,9 @@ async function main() {
       file: s.file,
       route,
       region: s.region,
-      store: cls.store,
     };
+    if (cls.server && cls.server !== 'remote') shot.server = cls.server;
+    if (cls.store) shot.store = cls.store;
     if (openFirstRow) shot.openFirstRow = true;
     if (NEEDS_CLIP.has(s.region)) shot.clip = `TODO # ${s.description}`;
     if (s.annotated) shot.annotate = `TODO # ${s.description}`;
