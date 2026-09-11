@@ -27,7 +27,7 @@ password.
 
 | Command | Does |
 |---|---|
-| `yarn shoot` | every shot, every language, into `images/` |
+| `yarn shoot` | every shot, every language, into `images/<lang>/` |
 | `yarn shoot --lang fr` | one language |
 | `yarn shoot --only outbound` | shots whose id contains a string |
 | `yarn shoot --tag replenishment` | shots carrying a tag |
@@ -69,10 +69,10 @@ against the live demo at 1440x900 on 2026-09-10 (client `v0.0.368-rc0`):
 |---|---|
 | `full` | *(viewport screenshot)* |
 | `content` | `div[class^="_main_"]:has(> div[class^="_content_"])` |
-| `content-top` | `header[class^="_header_"]` |
-| `detail-header` | `div[class^="_toolbar_"]` |
-| `tab` | `div[class^="_list_158sc"]` |
-| `footer` | `div[class^="_footer_mrv2s"]` — hold, status crumbs, confirm |
+| `content-top` | `div[class^="_page_"] > div[class^="_main_"] > header` |
+| `detail-header` | `… > header div[class^="_toolbar_"]` (scoped inside the page header) |
+| `tab` | `div[class^="_list_"]:has(> [data-testid^="tab-"])` |
+| `footer` | `div[class^="_footer_"]:has([data-testid="status-crumbs"])` — hold, status crumbs, confirm |
 | `footer-app` | `[data-testid="app-footer"]` — store, user, sync |
 | `nav` | `[data-testid="drawer"]` |
 | `panel` | `[data-testid="detail-panel"]` |
@@ -112,6 +112,31 @@ hand-drawn ones already in the docs, in the same orange (`#e35f2a`, override in
 The overlay is rendered as a `popover` so it enters the top layer. Native
 `<dialog>` elements are also top-layer, so a plain high-`z-index` div would be
 painted underneath them — verified, this approach paints above an open dialog.
+
+## Output layout
+
+The filename is the same in every language; only the folder changes.
+
+```
+images/
+  en/outbound-goto.png
+  fr/outbound-goto.png
+  es/outbound-goto.png
+  pt/outbound-goto.png
+```
+
+So a locale can be diffed against another, or cleared and re-shot, in one go.
+`--out-dir` changes the root.
+
+The name is the shot **id**, not the original docs filename. Docs basenames are
+only unique within their page bundle - `export.png` occurs 8 times across the
+catalogue, and 18 basenames collide in total - so a flat per-language folder
+keyed on them would silently overwrite 32 captures. Shot ids are unique.
+
+`--in-place` writes over the actual file in the docs repo instead, using the
+`file:` recorded on the shot. It stays English-only: the translated pages share
+the same image files, so writing a French capture over one would break the
+English page.
 
 ## Migrating the existing catalogue
 

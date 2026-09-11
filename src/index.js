@@ -76,6 +76,23 @@ async function loadShots(dir, base = dir) {
   return shots;
 }
 
+/**
+ * A hand-written shot in shots/ overrides the importer's stub of the same id
+ * in shots/generated/. Without this, "promoting" a shot leaves both copies
+ * loaded and the stub keeps being reported as pending forever.
+ */
+function dedupe(shots) {
+  const byId = new Map();
+  for (const shot of shots) {
+    const generated = shot.source.startsWith('generated');
+    const existing = byId.get(shot.id);
+    if (!existing || (existing.source.startsWith('generated') && !generated)) {
+      byId.set(shot.id, shot);
+    }
+  }
+  return [...byId.values()];
+}
+
 /** A shot the importer left for a human: `clip: "TODO # ..."`. */
 function pendingReview(shot) {
   const todo = (v) => typeof v === 'string' && v.trimStart().startsWith('TODO');
@@ -91,7 +108,7 @@ async function main() {
   const outDir = args.outDir ?? path.join(ROOT, 'images');
   const languages = args.lang ? [args.lang] : cfg.languages ?? DOC_LANGUAGES;
 
-  const all = await loadShots(path.join(ROOT, 'shots'));
+  const all = dedupe(await loadShots(path.join(ROOT, 'shots')));
   let shots = all;
   if (args.only) shots = shots.filter((s) => s.id.includes(args.only) || s.source.includes(args.only));
   if (args.tag) shots = shots.filter((s) => (s.tags ?? []).includes(args.tag));

@@ -31,19 +31,29 @@ export const REGIONS = {
    * so this is a single element rather than a union of several.
    */
   'content-top': {
-    selector: 'header[class^="_header_"]',
+    // Scoped to the page: `header[class^="_header_"]` alone also matches the
+    // command palette's screen-reader-only header (`_header_a0a74 _srOnly`),
+    // which sits earlier in the DOM inside a closed <dialog>, so `.first()`
+    // picked a hidden element and the capture timed out. The page header is
+    // the only <header> that is a direct child of the page's main column.
+    selector: 'div[class^="_page_"] > div[class^="_main_"] > header',
     description: 'Breadcrumb, action buttons, detail toolbar and tab strip.',
   },
 
   /** The field row inside a detail header (Customer name, Customer reference). */
   'detail-header': {
-    selector: 'div[class^="_toolbar_"]',
+    // Two `_toolbar_` modules exist: the detail field row (inside the page
+    // header) and the table's filter toolbar (`_toolbar_txd3y`, in the body).
+    // Scope to the header so a list page can never resolve to the wrong one.
+    selector: 'div[class^="_page_"] > div[class^="_main_"] > header div[class^="_toolbar_"]',
     description: 'Detail view field row.',
   },
 
   /** Tab strip of a detail view. Individual tabs are [data-testid^="tab-"]. */
   tab: {
-    selector: 'div[class^="_list_158sc"]',
+    // Identify the strip by what it contains rather than by a build hash:
+    // the tabs themselves carry [data-testid="tab-*"] and are direct children.
+    selector: 'div[class^="_list_"]:has(> [data-testid^="tab-"])',
     description: 'Detail view tab strip.',
   },
 
@@ -52,7 +62,10 @@ export const REGIONS = {
    * NOT the same element as the app footer - see `footer-app`.
    */
   footer: {
-    selector: 'div[class^="_footer_mrv2s"]',
+    // Same idea: the detail footer is the one that contains the status crumbs.
+    // The app footer is a <footer> element with its own test id, so it can't
+    // match `div[class^="_footer_"]` either way.
+    selector: 'div[class^="_footer_"]:has([data-testid="status-crumbs"])',
     description: 'Detail status bar (hold, status crumbs, confirm button).',
   },
 

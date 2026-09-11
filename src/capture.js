@@ -28,7 +28,11 @@ export async function capture(page, { outFile, clipSelector, pad = 0, masks = []
     return outFile;
   }
 
-  const locator = page.locator(clipSelector).first();
+  // Restrict to VISIBLE matches before taking the first. Loose prefix
+  // selectors can match an element inside a closed <dialog> or a
+  // screen-reader-only node that appears earlier in the DOM; without this
+  // filter `.first()` would lock onto it and wait out the timeout.
+  const locator = page.locator(clipSelector).filter({ visible: true }).first();
   await locator.waitFor({ state: 'visible', timeout: 10000 });
 
   if (!pad) {
@@ -54,8 +58,18 @@ export async function capture(page, { outFile, clipSelector, pad = 0, masks = []
 /**
  * Where a capture is written.
  *
- *   images/<id>.<lang>.png                      (default)
+ *   images/<lang>/<id>.png                      (default)
  *   <docs repo>/<manifest file path>            (--in-place, English only)
+ *
+ * The filename is identical in every language and only the folder changes, so
+ * the same image can be diffed across locales and a whole language can be
+ * copied or cleared in one go.
+ *
+ * The name is the shot id, not the original docs filename, because docs
+ * basenames are only unique within their page bundle: `export.png` occurs 8
+ * times across the catalogue and 18 basenames collide in total, which would
+ * silently overwrite 32 captures in a flat per-language folder. Shot ids are
+ * unique by construction.
  *
  * In-place writing is what makes this useful for the docs: the manifest already
  * records the exact path each image lives at, so a run can update the repo
@@ -77,5 +91,5 @@ export function outputPath({ outDir, shot, language, inPlace, docsRoot }) {
     }
     return path.join(docsRoot, shot.file);
   }
-  return path.join(outDir, `${shot.id}.${language}.png`);
+  return path.join(outDir, language, `${shot.id}.png`);
 }
