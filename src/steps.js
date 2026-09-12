@@ -81,11 +81,29 @@ async function runStep(page, step) {
     return;
   }
   if (step.fill) {
-    await page.locator(step.fill.selector).first().fill(step.fill.text, { timeout: DEFAULT_TIMEOUT });
+    // Validate the shape before Playwright does, so a YAML slip reads as
+    // "you wrote it wrong" rather than "value: expected string, got undefined".
+    // The classic mistake is `fill: { '<selector>', '<text>' }` - a flow
+    // mapping with no colons, which YAML parses as two keys with null values.
+    const { selector, text } = step.fill ?? {};
+    if (typeof selector !== 'string' || typeof text !== 'string') {
+      throw new Error(
+        `fill needs both keys named: fill: {selector: '[data-testid="..."]', text: '...'}\n` +
+          `  got: ${JSON.stringify(step.fill)}`
+      );
+    }
+    await page.locator(selector).first().fill(text, { timeout: DEFAULT_TIMEOUT });
     await page.waitForTimeout(250);
     return;
   }
   if (step.select) {
+    const { selector, option } = step.select ?? {};
+    if (typeof selector !== 'string' || typeof option !== 'string') {
+      throw new Error(
+        `select needs both keys named: select: {selector: '...', option: '[data-testid="..."]'}\n` +
+          `  got: ${JSON.stringify(step.select)}`
+      );
+    }
     await page.locator(step.select.selector).first().click({ timeout: DEFAULT_TIMEOUT });
     await page.locator('[role="menu"]').waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
     await page.locator(step.select.option).first().click({ timeout: DEFAULT_TIMEOUT });

@@ -27,7 +27,7 @@ password.
 
 | Command | Does |
 |---|---|
-| `yarn shoot` | every shot, every language, into `images/` |
+| `yarn shoot` | every shot, every language, into `images/<lang>/` |
 | `yarn shoot --lang fr` | one language |
 | `yarn shoot --only outbound` | shots whose id contains a string |
 | `yarn shoot --tag replenishment` | shots carrying a tag |
@@ -60,6 +60,84 @@ annotation type. The short version:
       text: Start typing to filter by name
 ```
 
+## Steps: getting the screen into the right state
+
+Most documented screenshots are not of a bare route. They show a dialog open,
+a dropdown expanded, two rows ticked, a field half filled in. A shot therefore
+carries a `steps:` list that runs after the page loads and before the capture.
+
+Every shot executes in this fixed order:
+
+```
+navigate to route → dismiss stray overlays → openFirstRow → steps → annotate → capture
+```
+
+So `openFirstRow` has already opened a record by the time `steps` run, and the
+annotation overlay is drawn on whatever state the steps leave behind.
+
+### The common case: a modal
+
+```yaml
+- id: outbound-add-item-modal
+  route: distribution/outbound-shipment
+  store: STR-BDR-DST
+  region: modal                 # crops to dialog[open]
+  openFirstRow: true            # the button lives on the detail view, not the list
+  steps:
+    - click: '[data-testid="add-item-button"]'
+    - waitFor: 'dialog[open]'
+```
+
+`region: modal` already resolves to `dialog[open]`, so once the step has opened
+it the crop finds it with nothing more to say. Keep the `waitFor` — without it
+the capture can race the dialog's render.
+
+### Vocabulary
+
+| Step | Does |
+|---|---|
+| `click: '<selector>'` | click an element |
+| `hover: '<selector>'` | hover — tooltips, the status-history popup |
+| `fill: {selector, text}` | type into a field |
+| `select: {selector, option}` | open a dropdown, then click `option` inside its `[role="menu"]` |
+| `check: '<selector>'` | tick a checkbox |
+| `press: Escape` | press a key |
+| `waitFor: '<selector>'` | wait until visible |
+| `waitForHidden: '<selector>'` | wait until gone |
+| `wait: 400` | milliseconds — for animation the selectors can't see |
+| `scrollTo: '<selector>'` | scroll into view |
+| `openDetailPanel: true` | open the right-hand "More" panel (needed for `panel` shots) |
+| `selectRows: 2` | tick the first N table rows — for bulk-action-bar shots |
+| `textClick: 'Log in'` | click by visible text — **avoid**, see below |
+
+Steps chain, so a deeper state is just a longer list:
+
+```yaml
+steps:
+  - click: '[data-testid="add-item-button"]'
+  - waitFor: 'dialog[open]'
+  - click: '[data-testid="item-search-input"]'
+  - fill: {selector: '[data-testid="item-search-input"]', text: 'Amox'}
+  - wait: 500
+```
+
+### Rules
+
+**Selectors must be test ids or structure, never visible text.** The same steps
+replay in English, French, Spanish and Portuguese, and `textClick: 'Add item'`
+finds nothing on the French run. Nearly every toolbar and dialog control has a
+`data-testid` — `add-item-button`, `dialog-button-ok`,
+`status-change-button-dropdown`, `filters-menu` — so this is rarely a
+constraint. `textClick` exists for the one-off where it genuinely isn't.
+
+**Steps are per shot, not shared.** Ten shots of the same dialog each carry the
+same two lines. That's deliberate — a shot should read as a complete recipe.
+If it gets tedious, a `defaults:` block at the top of a file merges into every
+shot in that file, so a file that is all one modal can declare `steps` once.
+
+**A step that fails fails the shot, not the run.** The runner reports it,
+moves on, and exits non-zero at the end.
+
 ## Cropping
 
 `region` names the part of the screen to capture. The selectors were verified
@@ -69,10 +147,11 @@ against the live demo at 1440x900 on 2026-09-10 (client `v0.0.368-rc0`):
 |---|---|
 | `full` | *(viewport screenshot)* |
 | `content` | `div[class^="_main_"]:has(> div[class^="_content_"])` |
-| `content-top` | `header[class^="_header_"]` |
-| `detail-header` | `div[class^="_toolbar_"]` |
-| `tab` | `div[class^="_list_158sc"]` |
-| `footer` | `div[class^="_footer_mrv2s"]` — hold, status crumbs, confirm |
+| `content-top` | `div[class^="_page_"] > div[class^="_main_"] > header` — breadcrumb + action buttons; **not** the filter bar |
+| `filter-bar` | `div[class^="_toolbar_"]:has([data-testid="filters-menu"])` — search/filter bar above a table |
+| `detail-header` | `… > header div[class^="_toolbar_"]` — the field row; **detail views only** |
+| `tab` | `div[class^="_list_"]:has(> [data-testid^="tab-"])` |
+| `footer` | `div[class^="_footer_"]:has([data-testid="status-crumbs"])` — hold, status crumbs, confirm |
 | `footer-app` | `[data-testid="app-footer"]` — store, user, sync |
 | `nav` | `[data-testid="drawer"]` |
 | `panel` | `[data-testid="detail-panel"]` |
@@ -84,6 +163,11 @@ against the live demo at 1440x900 on 2026-09-10 (client `v0.0.368-rc0`):
 
 CSS-module class names carry a build hash, so all structural selectors
 prefix-match. Anything with a `data-testid` uses it instead.
+
+Several regions only exist on one kind of page. `detail-header`, `tab` and
+`footer` are parts of an opened record — on a list route they resolve to
+nothing, so set `openFirstRow: true`. `panel` is closed until a step opens it.
+When a region isn't found the error says which of these applies.
 
 `pad` widens the crop; it defaults to 24px when a shot has annotations so a ring
 drawn just outside a button is not sliced off.
@@ -112,6 +196,31 @@ hand-drawn ones already in the docs, in the same orange (`#e35f2a`, override in
 The overlay is rendered as a `popover` so it enters the top layer. Native
 `<dialog>` elements are also top-layer, so a plain high-`z-index` div would be
 painted underneath them — verified, this approach paints above an open dialog.
+
+## Output layout
+
+The filename is the same in every language; only the folder changes.
+
+```
+images/
+  en/outbound-goto.png
+  fr/outbound-goto.png
+  es/outbound-goto.png
+  pt/outbound-goto.png
+```
+
+So a locale can be diffed against another, or cleared and re-shot, in one go.
+`--out-dir` changes the root.
+
+The name is the shot **id**, not the original docs filename. Docs basenames are
+only unique within their page bundle - `export.png` occurs 8 times across the
+catalogue, and 18 basenames collide in total - so a flat per-language folder
+keyed on them would silently overwrite 32 captures. Shot ids are unique.
+
+`--in-place` writes over the actual file in the docs repo instead, using the
+`file:` recorded on the shot. It stays English-only: the translated pages share
+the same image files, so writing a French capture over one would break the
+English page.
 
 ## Migrating the existing catalogue
 
@@ -164,14 +273,36 @@ runner resolves the id from the store code. Which store matters:
 - `clearOverlays` dismisses the unexpected-error modal and the "A new version is
   available" stale-bundle modal, both of which appear unprompted on the demos.
 
+## Troubleshooting
+
+**`Login did not complete: <message>`**
+The server rejected the credentials, and `<message>` is its own wording (e.g.
+"Invalid credentials"). Fix `OMS_USERNAME` / `OMS_PASSWORD`.
+
+**`Bounced back to the login page at .../resolve-store`**
+Login was skipped or silently failed. This should no longer happen - if it does,
+run with `--headed` and watch whether the form is filled in.
+
+**`Neither a login form nor a signed-in view appeared`**
+The server did not render within 30s. Check it is up and `OMS_URL` is right.
+
+**`Store "STR-..." is not available to this user`**
+Run `yarn stores` to see the codes this account can actually open, and fix the
+`store:` field on the shot.
+
+**`This shot needs the "central" server but config.json has no centralUrl`**
+Shots under `/manage/*`, `/programs/*` and `/replenishment/purchase-order` carry
+`server: central`. Set `centralUrl` in `config.json`.
+
+**`All N matching shots are unavailable: ... pending review`**
+The shots exist but the importer left `clip:` or `annotate:` as `TODO`. Fill
+those in, or pick a different filter. `yarn shot-list` lists what is pending.
+
 ## Known gaps
 
 - **The `toast` selector is unverified.** No toast container exists in the DOM
   until one fires and none could be triggered during the walk. `src/regions.js`
   carries a candidate list; confirm it against a real toast and prune.
-- **The login form has no test ids**, so login uses accessible locators
-  (`getByLabel(/username/i)`). Adding test ids to the login form would make this
-  sturdier.
 - **Non-English in-place writing is refused.** Translated docs pages reuse the
   English image files, so writing a French capture over one would break the
   English page. Non-English runs go to `--out-dir` until the docs adopt

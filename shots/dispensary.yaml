@@ -1,0 +1,949 @@
+# Generated from manifest.yaml. Review before use.
+#
+# Each shot carries the route and region from the catalogue. Two things
+# still need a human:
+#   clip:     which element, for content-part / modal-part / control shots
+#   annotate: where the arrows and callouts go - open the current image
+#             in the docs repo and copy what is drawn on it
+
+defaults:
+  tags:
+    - dispensary
+shots:
+  - id: clinicians-dispensary-menu
+    file: content/docs/dispensary/images/clinicians_dispensary_menu.png
+    route: dispensary/clinicians
+    region: nav
+    store: STR-BDR-HCC
+    annotate:
+      - type: arrow
+        to: '[data-testid="drawer"] button[data-selected="true"]'
+        from: above-right
+        length: 100
+    '#': Nav drawer, Dispensary > Clinicians
+  - id: clinicians-list-view
+    file: content/docs/dispensary/images/clinicians-list-view.png
+    route: dispensary/clinicians
+    region: full
+    store: STR-BDR-HCC
+    '#': Clinicians list with Tawer
+  - id: dispensary-gotoencounters
+    file: content/docs/dispensary/encounters/images/dispensary_gotoencounters.png
+    route: dispensary/encounter
+    region: nav
+    store: STR-BDR-HCC
+    annotate:
+      - type: arrow
+        to: '[data-testid="drawer"] button[data-selected="true"]'
+        from: above-right
+        length: 100
+    '#': Nav drawer, Dispensary > Encounters
+  - id: dispensary-menu
+    file: content/docs/dispensary/patients/images/dispensary_menu.png
+    route: dispensary/patients
+    region: nav
+    store: STR-BDR-HCC
+    annotate:
+      - type: arrow
+        to: '[data-testid="drawer"] button[data-selected="true"]'
+        from: above-right
+        length: 100
+    '#': Nav drawer, Dispensary > Patients
+  - id: patient-list-view
+    file: content/docs/dispensary/patients/images/patient_list_view.png
+    route: dispensary/patients
+    region: content
+    store: STR-BDR-HCC
+    '#': Patient list
+  - id: patient-filter
+    file: content/docs/dispensary/patients/images/patient_filter.png
+    route: dispensary/patients
+    region: filter-bar
+    store: STR-BDR-HCC
+    '#': Patient search/filter bar
+  - id: patient-new
+    file: content/docs/dispensary/patients/images/patient_new.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-patient-button"]'
+      - waitFor: 'dialog[open]'
+    '#': New patient wizard, step 1 Create patient
+  - id: patient-search
+    file: content/docs/dispensary/patients/images/patient_search.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-patient-button"]'
+      - waitFor: 'dialog[open]'
+      - waitFor: '[data-testid="input-firstName"]'
+      - fill: { selector: '[data-testid="input-firstName"]', text: 'Crux' }
+      - fill: { selector: '[data-testid="input-lastName"]', text: 'Flimberton' }
+      - click: '[data-testid="dialog-button-ok"]'
+      - wait: 2000
+      - waitFor: 'div[data-datatable]'
+    '#': New patient wizard, step 2 Search results
+  - id: patient-creation-detail
+    file: content/docs/dispensary/patients/images/patient_creation_detail.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    '#': New patient wizard, step 3 Patient details form
+  - id: fetch-patient-button
+    file: content/docs/dispensary/patients/images/fetch_patient_button.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    annotate: 'TODO # Search results, fetch-from-central icon'
+    '#': Search results, fetch-from-central icon
+  - id: fetch-patient-row
+    file: content/docs/dispensary/patients/images/fetch_patient_row.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    '#': Search results row with fetch tooltip
+  - id: fetch-patient-confirmation
+    file: content/docs/dispensary/patients/images/fetch_patient_confirmation.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    '#': Patient Data Retrieval confirmation
+  - id: fetch-patient-done
+    file: content/docs/dispensary/patients/images/fetch_patient_done.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    '#': Patient Data Retrieval complete, View patient
+  - id: insurance-list-view
+    file: content/docs/dispensary/patients/images/insurance_list_view.png
+    route: dispensary/patients
+    region: content
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Patient detail, Insurance tab list
+  - id: insurance-add-button
+    file: content/docs/dispensary/patients/images/insurance_add_button.png
+    route: dispensary/patients
+    region: control
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Insurance button (zoomed)'
+    '#': Add Insurance button (zoomed)
+  - id: insurance-empty-modal
+    file: content/docs/dispensary/patients/images/insurance_empty_modal.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': New insurance policy, empty
+  - id: insurance-success
+    file: content/docs/dispensary/patients/images/insurance_success.png
+    route: dispensary/patients
+    region: toast
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': '"Insurance created successfully" snackbar'
+  - id: insurance-failed-to-save
+    file: content/docs/dispensary/patients/images/insurance_failed_to_save.png
+    route: dispensary/patients
+    region: content
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Validation error banner at footer with modal open
+  - id: insurance-row-select
+    file: content/docs/dispensary/patients/images/insurance_row_select.png
+    route: dispensary/patients
+    region: content-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Insurance list row being selected'
+    '#': Insurance list row being selected
+  - id: insurance-filled-modal
+    file: content/docs/dispensary/patients/images/insurance_filled_modal.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Insurance policy modal, pre-filled
+  - id: insurance-edit-modal
+    file: content/docs/dispensary/patients/images/insurance_edit_modal.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Insurance modal, Provider name dropdown open
+  - id: goto-prescriptions
+    file: content/docs/dispensary/prescriptions/images/goto_prescriptions.png
+    route: dispensary/prescription
+    region: nav
+    store: STR-BDR-HCC
+    annotate:
+      - type: arrow
+        to: '[data-testid="drawer"] button[data-selected="true"]'
+        from: above-right
+        length: 100
+    '#': Nav drawer, Dispensary > Prescriptions
+  - id: prescription-filters
+    file: content/docs/dispensary/prescriptions/images/prescription_filters.png
+    route: dispensary/prescription
+    region: content-top
+    store: STR-BDR-HCC
+    '#': Prescription Filters dropdown open
+  - id: prescription-delete-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_delete_step_1.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    annotate: 'TODO # Rows selected, Delete in bulk-action bar'
+    '#': Rows selected, Delete in bulk-action bar
+  - id: prescription-delete-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_delete_step_2.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    '#': Delete confirmation dialog
+  - id: prescription-delete-step-3
+    file: content/docs/dispensary/prescriptions/images/prescription_delete_step_3.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    '#': '"Deleted 2 prescriptions" snackbar'
+  - id: click-new-prescription
+    file: content/docs/dispensary/prescriptions/images/click_new_prescription.png
+    route: dispensary/prescription
+    region: content
+    store: STR-BDR-HCC
+    annotate: 'TODO # New Prescription button'
+    '#': New Prescription button
+  - id: prescription-new-prescription-name
+    file: content/docs/dispensary/prescriptions/images/prescription_new_prescription_name.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    '#': Create Prescription dialog, patient selected
+  - id: prescription-new-prescription-no-match
+    file: content/docs/dispensary/prescriptions/images/prescription_new_prescription_no_match.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    '#': Create Prescription, New Patient option
+  - id: prescription-new-prescription-create-patient
+    file: content/docs/dispensary/prescriptions/images/prescription_new_prescription_create_patient.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    '#': Create patient wizard from prescription
+  - id: prescription-change-patient-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_1.png
+    route: dispensary/prescription
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': 'Prescription header: Patient, Clinician, Date'
+  - id: prescription-change-patient-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_2.png
+    route: dispensary/prescription
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Header, Patient dropdown open
+  - id: prescription-change-patient-step-3
+    file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_3.png
+    route: dispensary/prescription
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Header, patient changed
+  - id: prescription-edit-patient-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_edit_patient_step_1.png
+    route: dispensary/prescription
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    annotate: 'TODO # Header, edit-patient pencil icon'
+    '#': Header, edit-patient pencil icon
+  - id: prescription-edit-patient-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_edit_patient_step_2.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Patient details edit form
+  - id: clinicians-search-new-prescription
+    file: content/docs/dispensary/prescriptions/images/clinicians_search_new_prescription.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Create Prescription, Clinician dropdown with Create Clinician
+  - id: clinicians-create-from-new-prescription
+    file: content/docs/dispensary/prescriptions/images/clinicians_create_from_new_prescription.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Create Clinician form
+  - id: prescription-change-clinician-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_change_clinician_step_1.png
+    route: dispensary/prescription
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Header, Clinician field before change
+  - id: prescription-change-clinician-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_change_clinician_step_2.png
+    route: dispensary/prescription
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Header, Clinician dropdown open (zoomed)
+  - id: prescription-change-clinician-step-3
+    file: content/docs/dispensary/prescriptions/images/prescription_change_clinician_step_3.png
+    route: dispensary/prescription
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Header, clinician changed
+  - id: prescription-created
+    file: content/docs/dispensary/prescriptions/images/prescription_created.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Newly created prescription with info panel open
+  - id: prescription-infopanel-more
+    file: content/docs/dispensary/prescriptions/images/prescription_infopanel_more.png
+    route: dispensary/prescription
+    region: control
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item / More toolbar buttons (zoomed)'
+    '#': Add Item / More toolbar buttons (zoomed)
+  - id: prescription-infopanel-open
+    file: content/docs/dispensary/prescriptions/images/prescription_infopanel_open.png
+    route: dispensary/prescription
+    region: panel
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Prescription information panel (right)
+  - id: prescription-statussequence1
+    file: content/docs/dispensary/prescriptions/images/prescription_statussequence1.png
+    route: dispensary/prescription
+    region: footer
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Status crumb New > Picked > Verified
+  - id: prescription-statussequence2
+    file: content/docs/dispensary/prescriptions/images/prescription_statussequence2.png
+    route: dispensary/prescription
+    region: footer
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Status crumb, all statuses passed
+  - id: prescription-statussequence-hover
+    file: content/docs/dispensary/prescriptions/images/prescription_statussequence_hover.png
+    route: dispensary/prescription
+    region: footer
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Status crumb with Order History hover popup
+  - id: prescription-add-item-button
+    file: content/docs/dispensary/prescriptions/images/prescription_add_item_button.png
+    route: dispensary/prescription
+    region: content
+    store: STR-BDR-HCC
+    openFirstRow: true
+    annotate: 'TODO # Empty prescription, Add Item button'
+    '#': Empty prescription, Add Item button
+  - id: prescription-new-item-button
+    file: content/docs/dispensary/prescriptions/images/prescription_new_item_button.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, left rail item list'
+    '#': Add Item modal, left rail item list
+  - id: prescription-additem-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_step_1.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Add Item modal, item search dropdown open
+  - id: prescription-additem-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_step_2.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Add Item modal, filtered item list
+  - id: prescription-additem-step-3
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_step_3.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Add Item modal, item selected with quantity + directions
+  - id: prescription-item-section
+    file: content/docs/dispensary/prescriptions/images/prescription_item_section.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, Item section'
+    '#': Add Item modal, Item section
+  - id: prescription-qty-section
+    file: content/docs/dispensary/prescriptions/images/prescription_qty_section.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, Quantity section'
+    '#': Add Item modal, Quantity section
+  - id: prescriptions-prescribed-qty
+    file: content/docs/dispensary/prescriptions/images/prescriptions_prescribed_qty.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, Quantity section with Prescribed Quantity'
+    '#': Add Item modal, Quantity section with Prescribed Quantity
+  - id: prescription-additem-listofbatches
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_listofbatches.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, batch table'
+    '#': Add Item modal, batch table
+  - id: prescription-additem-1
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_1.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, auto-allocated batch with info banner'
+    '#': Add Item modal, auto-allocated batch with info banner
+  - id: prescription-additem-1-collapsed
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_1_collapsed.png
+    route: dispensary/prescription
+    region: control
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, collapsed quantity summary row'
+    '#': Add Item modal, collapsed quantity summary row
+  - id: prescription-additem-issueunitstwobatches
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_issueunitstwobatches.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, allocation across two batches'
+    '#': Add Item modal, allocation across two batches
+  - id: prescription-additem-issueunitstwobatches-collapsed
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_issueunitstwobatches_collapsed.png
+    route: dispensary/prescription
+    region: control
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, collapsed two-batch summary'
+    '#': Add Item modal, collapsed two-batch summary
+  - id: prescription-warning-cant-allocate-more-than-we-have
+    file: content/docs/dispensary/prescriptions/images/prescription_warning_cant_allocate_more_than_we_have.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, pack-size allocation warning'
+    '#': Add Item modal, pack-size allocation warning
+  - id: prescription-warning-non-whole-packs
+    file: content/docs/dispensary/prescriptions/images/prescription_warning_non-whole-packs.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, non-whole-packs warning'
+    '#': Add Item modal, non-whole-packs warning
+  - id: prescription-warning-on-hold
+    file: content/docs/dispensary/prescriptions/images/prescription_warning_on-hold.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, on-hold/expired stock info banner'
+    '#': Add Item modal, on-hold/expired stock info banner
+  - id: prescription-additem-listofbatches-with-doses
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_listofbatches_with_doses.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, Batches section with VVM and doses'
+    '#': Add Item modal, Batches section with VVM and doses
+  - id: prescriptions-default-item-directions
+    file: content/docs/dispensary/prescriptions/images/prescriptions_default_item_directions.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, Directions with default-directions dropdown'
+    '#': Add Item modal, Directions with default-directions dropdown
+  - id: prescriptions-abbr-expansion
+    file: content/docs/dispensary/prescriptions/images/prescriptions_abbr_expansion.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, abbreviation expanded into directions'
+    '#': Add Item modal, abbreviation expanded into directions
+  - id: prescription-manual-directions
+    file: content/docs/dispensary/prescriptions/images/prescription_manual_directions.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item modal, manually typed directions'
+    '#': Add Item modal, manually typed directions
+  - id: prescription-delete-lines-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_delete_lines_step_1.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    annotate: 'TODO # Prescription lines selected, Delete in action bar'
+    '#': Prescription lines selected, Delete in action bar
+  - id: prescription-delete-lines-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_delete_lines_step_2.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Confirm remove 1 line
+  - id: prescription-delete-lines-step-3
+    file: content/docs/dispensary/prescriptions/images/prescription_delete_lines_step_3.png
+    route: dispensary/prescription
+    region: content
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': '"Deleted 1 line" snackbar above footer'
+  - id: prescription-backdate-highlight
+    file: content/docs/dispensary/prescriptions/images/prescription_backdate_highlight.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Prescription empty after deleting lines
+  - id: prescription-backdate-stock-levels
+    file: content/docs/dispensary/prescriptions/images/prescription_backdate_stock_levels.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    annotate: 'TODO # Add Item modal with hand-drawn callouts (annotated diagram)'
+    '#': Add Item modal with hand-drawn callouts (annotated diagram)
+  - id: prescription-backdate-delete-lines
+    file: content/docs/dispensary/prescriptions/images/prescription_backdate_delete_lines.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Confirm remove all lines
+  - id: prescription-abbreviation
+    file: content/docs/dispensary/prescriptions/images/prescription_abbreviation.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Add Item modal showing abbreviation expansion in context
+  - id: prescription-page
+    file: content/docs/dispensary/prescriptions/images/prescription_page.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Prescription detail with Print Labels in toolbar
+  - id: prescription-print-label-row
+    file: content/docs/dispensary/prescriptions/images/prescription_print_label_row.png
+    route: dispensary/prescription
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Rows selected, Print Labels in bulk-action bar
+  - id: prescription-columns-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_columns_step_1.png
+    route: dispensary/prescription
+    region: content-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Table header, Show/hide columns button'
+    annotate: 'TODO # Table header, Show/hide columns button'
+    '#': Table header, Show/hide columns button
+  - id: prescription-columns-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_columns_step_2.png
+    route: dispensary/prescription
+    region: content-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Show/hide columns checklist open'
+    '#': Show/hide columns checklist open
+  - id: prescription-columns-step-3
+    file: content/docs/dispensary/prescriptions/images/prescription_columns_step_3.png
+    route: dispensary/prescription
+    region: content-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Table with reduced column set'
+    '#': Table with reduced column set
+  - id: prescriptions-cancel-button
+    file: content/docs/dispensary/prescriptions/images/prescriptions_cancel_button.png
+    route: dispensary/prescription
+    region: panel-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Side panel Pricing/Insurance and Actions > Cancel prescription'
+    '#': Side panel Pricing/Insurance and Actions > Cancel prescription
+  - id: prescription-cancelled
+    file: content/docs/dispensary/prescriptions/images/prescription_cancelled.png
+    route: dispensary/prescription
+    region: content
+    store: STR-BDR-HCC
+    annotate: 'TODO # Prescription list with CANCELLED status circled'
+    '#': Prescription list with CANCELLED status circled
+  - id: prescription-confirm-verified
+    file: content/docs/dispensary/prescriptions/images/prescription_confirm_verified.png
+    route: dispensary/prescription
+    region: footer
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Confirm Verified button in footer
+  - id: prescription-payment-modal
+    file: content/docs/dispensary/prescriptions/images/prescription_payment_modal.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Payment modal
+  - id: insurance-select-provider-modal
+    file: content/docs/dispensary/prescriptions/images/insurance_select_provider_modal.png
+    route: dispensary/prescription
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Payment modal, Insurance Policy dropdown open
+  - id: insurance-covered
+    file: content/docs/dispensary/prescriptions/images/insurance_covered.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Payment modal, insurance discount applied'
+    '#': Payment modal, insurance discount applied
+  - id: patient-enrolment-column
+    file: content/docs/programs/patient programs/images/patient_enrolment_column.png
+    route: dispensary/patients
+    region: content-part
+    store: STR-BDR-HCC
+    clip: 'TODO # Patient list with Program Enrolments column'
+    '#': Patient list with Program Enrolments column
+  - id: patient-detail-view
+    file: content/docs/programs/patient programs/images/patient_detail_view.png
+    route: dispensary/patients
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Program patient detail view
+  - id: patient-history
+    file: content/docs/programs/patient programs/images/patient_history.png
+    route: dispensary/patients
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Document Edit History panel'
+    '#': Document Edit History panel
+  - id: patient-program-tab
+    file: content/docs/programs/patient programs/images/patient_program_tab.png
+    route: dispensary/patients
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Patient detail, Programs tab
+  - id: patient-encounter-tab
+    file: content/docs/programs/patient programs/images/patient_encounter_tab.png
+    route: dispensary/patients
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Patient detail, Encounters tab
+  - id: patient-contact-tracing-tab
+    file: content/docs/programs/patient programs/images/patient_contact_tracing_tab.png
+    route: dispensary/patients
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Patient detail, Contact Tracing tab
+  - id: patient-vaccinations-tab
+    file: content/docs/programs/patient programs/images/patient_vaccinations_tab.png
+    route: dispensary/patients
+    region: content
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Patient detail, Vaccinations tab
+  - id: add-program-button
+    file: content/docs/programs/patient programs/images/add_program_button.png
+    route: dispensary/patients
+    region: control
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Program / Print toolbar buttons'
+    annotate: 'TODO # Add Program / Print toolbar buttons'
+    '#': Add Program / Print toolbar buttons
+  - id: select-program-enrolment
+    file: content/docs/programs/patient programs/images/select_program_enrolment.png
+    route: dispensary/patients
+    region: menu
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Program selection popup
+  - id: hiv-enrolment-form
+    file: content/docs/programs/patient programs/images/hiv_enrolment_form.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': HIV program enrolment form
+  - id: dispensary-gotoencounters--2
+    file: content/docs/programs/patient programs/images/dispensary_gotoencounters.png
+    route: dispensary/encounter
+    region: nav
+    store: STR-BDR-HCC
+    annotate:
+      - type: arrow
+        to: '[data-testid="drawer"] button[data-selected="true"]'
+        from: above-right
+        length: 100
+    '#': Nav drawer, Dispensary > Encounters
+  - id: encounter-list
+    file: content/docs/programs/patient programs/images/encounter_list.png
+    route: dispensary/encounter
+    region: content
+    store: STR-BDR-HCC
+    '#': Encounters list
+  - id: add-encounter-button
+    file: content/docs/programs/patient programs/images/add_encounter_button.png
+    route: dispensary/patients
+    region: menu
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Add Program / Encounter / Contact / Insurance dropdown
+  - id: add-encounter
+    file: content/docs/programs/patient programs/images/add_encounter.png
+    route: dispensary/encounter
+    region: modal
+    store: STR-BDR-HCC
+    '#': New Encounter dialog
+  - id: encounter-header
+    file: content/docs/programs/patient programs/images/encounter_header.png
+    route: dispensary/encounter
+    region: detail-header
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Encounter header (patient, program, visit date, status)
+  - id: encounter-side-panel
+    file: content/docs/programs/patient programs/images/encounter_side_panel.png
+    route: dispensary/encounter
+    region: panel
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Encounter side panel with previous encounters
+  - id: encounter-detail-view
+    file: content/docs/programs/patient programs/images/encounter_detail_view.png
+    route: dispensary/encounter
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Encounter detail view with form sections
+  - id: add-contact-button
+    file: content/docs/programs/patient programs/images/add_contact_button.png
+    route: dispensary/patients
+    region: control
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Contact / Print toolbar buttons'
+    annotate: 'TODO # Add Contact / Print toolbar buttons'
+    '#': Add Contact / Print toolbar buttons
+  - id: contact-tracing-modal
+    file: content/docs/programs/patient programs/images/contact_tracing_modal.png
+    route: dispensary/patients
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': 'Add Contact: type of contact dialog'
+  - id: contact-trace
+    file: content/docs/programs/patient programs/images/contact_trace.png
+    route: dispensary/contact-trace
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Contact trace detail view
+  - id: link-to-patient-button
+    file: content/docs/programs/patient programs/images/link_to_patient_button.png
+    route: dispensary/contact-trace
+    region: content-top
+    store: STR-BDR-HCC
+    openFirstRow: true
+    annotate: 'TODO # Contact trace header, Link to Patient button'
+    '#': Contact trace header, Link to Patient button
+  - id: link-to-patient
+    file: content/docs/programs/patient programs/images/link_to_patient.png
+    route: dispensary/contact-trace
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Link to patient search dialog
+  - id: unlink-patient
+    file: content/docs/programs/patient programs/images/unlink_patient.png
+    route: dispensary/contact-trace
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    annotate: 'TODO # Linked patient with Unlink Patient button'
+    '#': Linked patient with Unlink Patient button
+  - id: vax-card-view
+    file: content/docs/programs/patient programs/images/vax_card_view.png
+    route: dispensary/vaccine-card
+    region: content
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Vaccination Card for an immunisation programme
+  - id: vaccination-edit
+    file: content/docs/programs/patient programs/images/vaccination_edit.png
+    route: dispensary/vaccine-card
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Vaccination detail with View prescription link
+  - id: encounter-vax-card
+    file: content/docs/programs/patient programs/images/encounter_vax_card.png
+    route: dispensary/encounter
+    region: full
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Encounter detail, Vaccinations tab
+  - id: encounter-new-vaccination
+    file: content/docs/programs/patient programs/images/encounter_new_vaccination.png
+    route: dispensary/vaccine-card
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': New vaccination record dialog
+  - id: vaccination-other-facility
+    file: content/docs/programs/patient programs/images/vaccination_other_facility.png
+    route: dispensary/vaccine-card
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Facility set to Other with free-text field'
+    '#': Facility set to Other with free-text field
+  - id: vaccination-given-batch-select
+    file: content/docs/programs/patient programs/images/vaccination_given_batch_select.png
+    route: dispensary/vaccine-card
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Vaccine given with batch selection
+  - id: vaccination-given-other-facility
+    file: content/docs/programs/patient programs/images/vaccination_given_other_facility.png
+    route: dispensary/vaccine-card
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Vaccine given at another facility
+  - id: past-vaccination-switch
+    file: content/docs/programs/patient programs/images/past_vaccination_switch.png
+    route: dispensary/vaccine-card
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Past date with stock-transaction switch off'
+    '#': Past date with stock-transaction switch off
+  - id: past-vaccination-switch-on
+    file: content/docs/programs/patient programs/images/past_vaccination_switch_on.png
+    route: dispensary/vaccine-card
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Stock-transaction switch on, vaccine item and batch'
+    '#': Stock-transaction switch on, vaccine item and batch
+  - id: vaccination-not-given-reason
+    file: content/docs/programs/patient programs/images/vaccination_not_given_reason.png
+    route: dispensary/vaccine-card
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Vaccine not given with Reason dropdown open'
+    '#': Vaccine not given with Reason dropdown open
+  - id: save-vaccination
+    file: content/docs/programs/patient programs/images/save_vaccination.png
+    route: dispensary/vaccine-card
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    annotate: 'TODO # Vaccination dialog, OK button'
+    '#': Vaccination dialog, OK button
+  - id: vaccination-view-prescription
+    file: content/docs/programs/patient programs/images/vaccination_view_prescription.png
+    route: dispensary/vaccine-card
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Vaccination saved banner with View prescription'
+    '#': Vaccination saved banner with View prescription
+  - id: edit-vaccination
+    file: content/docs/programs/patient programs/images/edit_vaccination.png
+    route: dispensary/vaccine-card
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Editing an existing vaccination record
+  - id: vaccination-revert-transaction
+    file: content/docs/programs/patient programs/images/vaccination_revert_transaction.png
+    route: dispensary/vaccine-card
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Revert existing stock transaction switch'
+    '#': Revert existing stock transaction switch
+  - id: vaccination-update-transactions
+    file: content/docs/programs/patient programs/images/vaccination_update_transactions.png
+    route: dispensary/vaccine-card
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Update stock transactions switch with batch list'
+    '#': Update stock transactions switch with batch list
+  - id: vaccination-given-other-sync-facility
+    file: content/docs/programs/patient programs/images/vaccination_given_other_sync_facility.png
+    route: dispensary/vaccine-card
+    region: modal
+    store: STR-BDR-HCC
+    openFirstRow: true
+    '#': Vaccination given at another sync facility (read-only)
+  - id: prescription-additem-manual-step-1
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_manual_step_1.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item, manual allocation step 1'
+    annotate: 'TODO # Add Item, manual allocation step 1'
+    '#': Add Item, manual allocation step 1
+  - id: prescription-additem-manual-step-2
+    file: content/docs/dispensary/prescriptions/images/prescription_additem_manual_step_2.png
+    route: dispensary/prescription
+    region: modal-part
+    store: STR-BDR-HCC
+    openFirstRow: true
+    clip: 'TODO # Add Item, manual allocation step 2'
+    '#': Add Item, manual allocation step 2
