@@ -40,6 +40,19 @@ async function runStep(page, step) {
     await page.waitForTimeout(step.wait);
     return;
   }
+  if (step.networkIdle) {
+    // "I clicked something and data is loading." Waits until no requests
+    // have been in flight for 500ms, then a short settle for React to paint.
+    // Prefer this over `wait: 2000`: it is as fast as the network allows and
+    // does not go stale when the server is slow.
+    //
+    // A container selector (`waitFor: 'div[data-datatable]'`) is NOT enough
+    // here - the table renders empty first and fills in when the query
+    // returns, so the container is visible long before the rows are.
+    await page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT }).catch(() => {});
+    await page.waitForTimeout(250);
+    return;
+  }
   if (step.waitFor) {
     await page.locator(step.waitFor).first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
     return;

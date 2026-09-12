@@ -104,7 +104,8 @@ the capture can race the dialog's render.
 | `press: Escape` | press a key |
 | `waitFor: '<selector>'` | wait until visible |
 | `waitForHidden: '<selector>'` | wait until gone |
-| `wait: 400` | milliseconds — for animation the selectors can't see |
+| `networkIdle: true` | wait for in-flight requests to finish — use after a click that loads data |
+| `wait: 400` | milliseconds — for animation the selectors can't see; **not** for data loading |
 | `scrollTo: '<selector>'` | scroll into view |
 | `openDetailPanel: true` | open the right-hand "More" panel (needed for `panel` shots) |
 | `selectRows: 2` | tick the first N table rows — for bulk-action-bar shots |
@@ -134,6 +135,14 @@ constraint. `textClick` exists for the one-off where it genuinely isn't.
 same two lines. That's deliberate — a shot should read as a complete recipe.
 If it gets tedious, a `defaults:` block at the top of a file merges into every
 shot in that file, so a file that is all one modal can declare `steps` once.
+
+**Wait for content, not containers.** A table renders empty and fills in when
+its query returns, so `waitFor: 'div[data-datatable]'` is satisfied before any
+rows exist. Wait for a row instead — `waitFor: 'dialog[open]
+[data-testid="table-row"]'` — or use `networkIdle: true` when you don't know
+what the data looks like. Reach for `wait: N` only for animation; if you find
+yourself adding `wait: 2000` to make a capture come out right, that's the
+signal you're waiting for the wrong thing.
 
 **A step that fails fails the shot, not the run.** The runner reports it,
 moves on, and exits non-zero at the end.

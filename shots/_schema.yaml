@@ -56,7 +56,8 @@ shots: []
 #                 - press: Escape
 #                 - waitFor: 'dialog[open]'
 #                 - waitForHidden: '...'
-#                 - wait: 400
+#                 - networkIdle: true      # after a click that loads data
+#                 - wait: 400              # animation only, never for data
 #                 - scrollTo: '...'
 #                 - openDetailPanel: true
 #                 - selectRows: 2
