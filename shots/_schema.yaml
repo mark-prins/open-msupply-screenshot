@@ -26,9 +26,13 @@ shots: []
 #               /programs/* only exist on the central server.
 #
 # region        required. One of the regions in src/regions.js:
-#                 full content content-top detail-header tab footer footer-app
-#                 nav nav-part panel panel-part modal modal-part menu toast
-#                 control
+#                 full content content-top filter-bar detail-header tab footer
+#                 footer-app nav nav-part panel panel-part modal modal-part
+#                 menu toast control
+#               detail-header, tab and footer exist only on an opened record -
+#               pair them with openFirstRow. content-top is the breadcrumb and
+#               action buttons; the search/filter bar above a table is
+#               filter-bar.
 #               Regions with no built-in selector (nav-part, panel-part,
 #               modal-part, control) need `clip`.
 #

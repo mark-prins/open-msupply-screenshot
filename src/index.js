@@ -246,6 +246,7 @@ async function main() {
           await capture(page, {
             outFile,
             clipSelector: resolveClip(shot),
+            region: shot.region,
             pad: shot.pad ?? (Array.isArray(shot.annotate) ? 24 : 0),
             masks: shot.masks ?? (shot.noMask ? [] : DEFAULT_MASKS),
             fullPage: shot.fullPage ?? false,

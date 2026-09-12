@@ -58,7 +58,7 @@ shots:
   - id: patient-filter
     file: content/docs/dispensary/patients/images/patient_filter.png
     route: dispensary/patients
-    region: content-top
+    region: filter-bar
     store: STR-BDR-HCC
     '#': Patient search/filter bar
   - id: patient-new
@@ -66,12 +66,23 @@ shots:
     route: dispensary/patients
     region: modal
     store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-patient-button"]'
+      - waitFor: 'dialog[open]'
     '#': New patient wizard, step 1 Create patient
   - id: patient-search
     file: content/docs/dispensary/patients/images/patient_search.png
     route: dispensary/patients
     region: modal
     store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-patient-button"]'
+      - waitFor: 'dialog[open]'
+      - waitFor: '[data-testid="input-firstName"]'
+      - fill: { selector: '[data-testid="input-firstName"]', text: 'Crux' }
+      - fill: { selector: '[data-testid="input-lastName"]', text: 'Flimberton' }
+      - click: '[data-testid="dialog-button-ok"]'
+      - waitFor: 'div[role="alert"]'
     '#': New patient wizard, step 2 Search results
   - id: patient-creation-detail
     file: content/docs/dispensary/patients/images/patient_creation_detail.png

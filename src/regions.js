@@ -37,7 +37,10 @@ export const REGIONS = {
     // picked a hidden element and the capture timed out. The page header is
     // the only <header> that is a direct child of the page's main column.
     selector: 'div[class^="_page_"] > div[class^="_main_"] > header',
-    description: 'Breadcrumb, action buttons, detail toolbar and tab strip.',
+    description: 'Breadcrumb and action buttons; on detail views also the field row and tab strip.',
+    hint:
+      'Does NOT include the table filter bar - in the new UI that sits below ' +
+      'the header, in the body. Use `filter-bar` for it.',
   },
 
   /** The field row inside a detail header (Customer name, Customer reference). */
@@ -47,6 +50,21 @@ export const REGIONS = {
     // Scope to the header so a list page can never resolve to the wrong one.
     selector: 'div[class^="_page_"] > div[class^="_main_"] > header div[class^="_toolbar_"]',
     description: 'Detail view field row.',
+    hint:
+      'Only exists on DETAIL views (an opened record). On a list page there is ' +
+      'no field row - for the search/filter bar above a table use `filter-bar`.',
+  },
+
+  /**
+   * The filter/search bar that sits above a table - "Add filter", the active
+   * filter chips, the search box. In the old UI this lived in the header band;
+   * in the new UI it is the first child of the table root, in the body, so it
+   * is NOT part of `content-top`. Anchored on the filters menu button, which
+   * every filterable table carries.
+   */
+  'filter-bar': {
+    selector: 'div[class^="_toolbar_"]:has([data-testid="filters-menu"])',
+    description: 'Search / filter bar above a table (list pages and detail line tables).',
   },
 
   /** Tab strip of a detail view. Individual tabs are [data-testid^="tab-"]. */
@@ -55,6 +73,7 @@ export const REGIONS = {
     // the tabs themselves carry [data-testid="tab-*"] and are direct children.
     selector: 'div[class^="_list_"]:has(> [data-testid^="tab-"])',
     description: 'Detail view tab strip.',
+    hint: 'Only exists on DETAIL views. Set `openFirstRow: true` on a list route.',
   },
 
   /**
@@ -67,6 +86,9 @@ export const REGIONS = {
     // match `div[class^="_footer_"]` either way.
     selector: 'div[class^="_footer_"]:has([data-testid="status-crumbs"])',
     description: 'Detail status bar (hold, status crumbs, confirm button).',
+    hint:
+      'Only exists on DETAIL views. For the purple store/user/sync bar at the ' +
+      'very bottom use `footer-app`.',
   },
 
   /** App footer: store selector, user menu, central-server chip, sync. */
@@ -89,6 +111,7 @@ export const REGIONS = {
   panel: {
     selector: '[data-testid="detail-panel"]',
     description: 'Right-hand detail panel.',
+    hint: 'Closed by default - add a step `- openDetailPanel: true`.',
   },
 
   'panel-part': {

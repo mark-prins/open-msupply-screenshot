@@ -60,6 +60,84 @@ annotation type. The short version:
       text: Start typing to filter by name
 ```
 
+## Steps: getting the screen into the right state
+
+Most documented screenshots are not of a bare route. They show a dialog open,
+a dropdown expanded, two rows ticked, a field half filled in. A shot therefore
+carries a `steps:` list that runs after the page loads and before the capture.
+
+Every shot executes in this fixed order:
+
+```
+navigate to route → dismiss stray overlays → openFirstRow → steps → annotate → capture
+```
+
+So `openFirstRow` has already opened a record by the time `steps` run, and the
+annotation overlay is drawn on whatever state the steps leave behind.
+
+### The common case: a modal
+
+```yaml
+- id: outbound-add-item-modal
+  route: distribution/outbound-shipment
+  store: STR-BDR-DST
+  region: modal                 # crops to dialog[open]
+  openFirstRow: true            # the button lives on the detail view, not the list
+  steps:
+    - click: '[data-testid="add-item-button"]'
+    - waitFor: 'dialog[open]'
+```
+
+`region: modal` already resolves to `dialog[open]`, so once the step has opened
+it the crop finds it with nothing more to say. Keep the `waitFor` — without it
+the capture can race the dialog's render.
+
+### Vocabulary
+
+| Step | Does |
+|---|---|
+| `click: '<selector>'` | click an element |
+| `hover: '<selector>'` | hover — tooltips, the status-history popup |
+| `fill: {selector, text}` | type into a field |
+| `select: {selector, option}` | open a dropdown, then click `option` inside its `[role="menu"]` |
+| `check: '<selector>'` | tick a checkbox |
+| `press: Escape` | press a key |
+| `waitFor: '<selector>'` | wait until visible |
+| `waitForHidden: '<selector>'` | wait until gone |
+| `wait: 400` | milliseconds — for animation the selectors can't see |
+| `scrollTo: '<selector>'` | scroll into view |
+| `openDetailPanel: true` | open the right-hand "More" panel (needed for `panel` shots) |
+| `selectRows: 2` | tick the first N table rows — for bulk-action-bar shots |
+| `textClick: 'Log in'` | click by visible text — **avoid**, see below |
+
+Steps chain, so a deeper state is just a longer list:
+
+```yaml
+steps:
+  - click: '[data-testid="add-item-button"]'
+  - waitFor: 'dialog[open]'
+  - click: '[data-testid="item-search-input"]'
+  - fill: {selector: '[data-testid="item-search-input"]', text: 'Amox'}
+  - wait: 500
+```
+
+### Rules
+
+**Selectors must be test ids or structure, never visible text.** The same steps
+replay in English, French, Spanish and Portuguese, and `textClick: 'Add item'`
+finds nothing on the French run. Nearly every toolbar and dialog control has a
+`data-testid` — `add-item-button`, `dialog-button-ok`,
+`status-change-button-dropdown`, `filters-menu` — so this is rarely a
+constraint. `textClick` exists for the one-off where it genuinely isn't.
+
+**Steps are per shot, not shared.** Ten shots of the same dialog each carry the
+same two lines. That's deliberate — a shot should read as a complete recipe.
+If it gets tedious, a `defaults:` block at the top of a file merges into every
+shot in that file, so a file that is all one modal can declare `steps` once.
+
+**A step that fails fails the shot, not the run.** The runner reports it,
+moves on, and exits non-zero at the end.
+
 ## Cropping
 
 `region` names the part of the screen to capture. The selectors were verified
@@ -69,8 +147,9 @@ against the live demo at 1440x900 on 2026-09-10 (client `v0.0.368-rc0`):
 |---|---|
 | `full` | *(viewport screenshot)* |
 | `content` | `div[class^="_main_"]:has(> div[class^="_content_"])` |
-| `content-top` | `div[class^="_page_"] > div[class^="_main_"] > header` |
-| `detail-header` | `… > header div[class^="_toolbar_"]` (scoped inside the page header) |
+| `content-top` | `div[class^="_page_"] > div[class^="_main_"] > header` — breadcrumb + action buttons; **not** the filter bar |
+| `filter-bar` | `div[class^="_toolbar_"]:has([data-testid="filters-menu"])` — search/filter bar above a table |
+| `detail-header` | `… > header div[class^="_toolbar_"]` — the field row; **detail views only** |
 | `tab` | `div[class^="_list_"]:has(> [data-testid^="tab-"])` |
 | `footer` | `div[class^="_footer_"]:has([data-testid="status-crumbs"])` — hold, status crumbs, confirm |
 | `footer-app` | `[data-testid="app-footer"]` — store, user, sync |
@@ -84,6 +163,11 @@ against the live demo at 1440x900 on 2026-09-10 (client `v0.0.368-rc0`):
 
 CSS-module class names carry a build hash, so all structural selectors
 prefix-match. Anything with a `data-testid` uses it instead.
+
+Several regions only exist on one kind of page. `detail-header`, `tab` and
+`footer` are parts of an opened record — on a list route they resolve to
+nothing, so set `openFirstRow: true`. `panel` is closed until a step opens it.
+When a region isn't found the error says which of these applies.
 
 `pad` widens the crop; it defaults to 24px when a shot has annotations so a ring
 drawn just outside a button is not sliced off.
