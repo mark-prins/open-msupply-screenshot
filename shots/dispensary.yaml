@@ -82,7 +82,8 @@ shots:
       - fill: { selector: '[data-testid="input-firstName"]', text: 'Crux' }
       - fill: { selector: '[data-testid="input-lastName"]', text: 'Flimberton' }
       - click: '[data-testid="dialog-button-ok"]'
-      - waitFor: 'div[role="alert"]'
+      - wait: 2000
+      - waitFor: 'div[data-datatable]'
     '#': New patient wizard, step 2 Search results
   - id: patient-creation-detail
     file: content/docs/dispensary/patients/images/patient_creation_detail.png
