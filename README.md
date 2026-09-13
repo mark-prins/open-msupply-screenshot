@@ -147,6 +147,38 @@ signal you're waiting for the wrong thing.
 **A step that fails fails the shot, not the run.** The runner reports it,
 moves on, and exits non-zero at the end.
 
+## Recording a shot instead of writing one
+
+```bash
+yarn record dispensary/patients --store STR-BDR-HCC
+yarn record manage/stores --server central
+```
+
+Opens the app in a visible browser with a small authoring panel in the corner.
+It has four modes:
+
+| Mode | What happens |
+|---|---|
+| **Record** | Use the app normally. Clicks become `click:` steps, typing becomes a single `fill:` per field, Enter becomes `press: Enter`. If a click opens a dialog or menu, the matching `waitFor:` is added for you. Clicking a table row that opens a record becomes `openFirstRow: true`. |
+| **Region** | Hover the page. Every capture region under the cursor is outlined and named — `region: modal`, `region: filter-bar` — smallest first. Anything that isn't a named region is offered as a `clip:` on that element. Click to choose. |
+| **Annotate** | Pick a type (arrow, ring, box, label, number) and, where relevant, a `from` direction. Click the element to anchor to. The preview is drawn by the **same code `yarn shoot` uses**, so it is exactly what will be captured. |
+| **Pause** | The app behaves normally and nothing is recorded — for getting into position. |
+
+**Save** writes `shots/recorded/<id>.yaml`; **Done** closes. The panel lists every
+step and annotation with a `×` to remove it, and shows the shot's YAML shape
+as it grows.
+
+Two honesty rules the recorder enforces:
+
+- Every selector it emits prefers a `data-testid`. When an element has none —
+  a nav leaf, a bare heading — it falls back to a structural path and marks it
+  **red** in the panel, and the saved file starts with a comment counting the
+  fragile selectors. Those are the ones that will break when the layout changes.
+- Password fields are never recorded.
+
+The recorder holds the shot in Node, not in the page, so a full navigation
+mid-recording loses nothing — the panel is rebuilt from Node's copy.
+
 ## Cropping
 
 `region` names the part of the screen to capture. The selectors were verified

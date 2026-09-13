@@ -1,0 +1,5 @@
+shots:
+  - id: patient-creation-detail
+    route: dispensary/patients
+    store: STR-BDR-HCC
+    region: modal

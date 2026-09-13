@@ -44,10 +44,12 @@ export const DEFAULT_STYLE = {
  * @param {Annotation[]} annotations
  * @param {object} style
  */
-export async function drawAnnotations(page, annotations, style = {}) {
-  if (!annotations?.length) return;
-  await page.evaluate(
-    ({ annotations, style }) => {
+/**
+ * Runs IN THE PAGE. Kept as a plain named function, with no references to
+ * module scope, so the recorder can inject this very same code for its live
+ * preview - what you see while authoring is exactly what `yarn shoot` draws.
+ */
+export function renderAnnotations({ annotations, style }) {
       const S = { ...style };
       const NS = 'http://www.w3.org/2000/svg';
       const OVERLAY_ID = '__oms_shot_overlay__';
@@ -238,9 +240,11 @@ export async function drawAnnotations(page, annotations, style = {}) {
         host.removeAttribute('popover');
         host.style.zIndex = '2147483647';
       }
-    },
-    { annotations, style: { ...DEFAULT_STYLE, ...style } }
-  );
+}
+
+export async function drawAnnotations(page, annotations, style = {}) {
+  if (!annotations?.length) return;
+  await page.evaluate(renderAnnotations, { annotations, style: { ...DEFAULT_STYLE, ...style } });
 }
 
 export async function clearAnnotations(page) {

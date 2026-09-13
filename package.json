@@ -11,6 +11,7 @@
     "shot-list": "node src/index.js --list",
     "stores": "node src/index.js stores",
     "import-manifest": "node src/import-manifest.js",
+    "record": "node src/record.js",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {
