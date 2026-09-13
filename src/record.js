@@ -48,8 +48,12 @@ export async function attachRecorder(page, { route, store, server, onSave }) {
     annotate: [],
     savedTo: null,
     error: null,
-    ui: { pos: null, collapsed: false }, // panel position/state - not part of the saved shot
+    warning: null,
+    ui: { pos: null, collapsed: false, mode: 'record' }, // panel state - not part of the saved shot
   };
+
+  /** Regions that only exist after an interaction - a shot of one with no steps cannot be replayed. */
+  const TRANSIENT = new Set(['modal', 'modal-part', 'menu', 'panel', 'panel-part']);
   let resolveDone;
   const done = new Promise((r) => (resolveDone = r));
 
@@ -57,6 +61,7 @@ export async function attachRecorder(page, { route, store, server, onSave }) {
 
   const handle = async (evt) => {
     shot.error = null;
+    if (evt.type !== 'ui') shot.warning = null; // a mode change should not clear a save warning
     switch (evt.type) {
       case 'id':
         shot.id = String(evt.id || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -103,6 +108,13 @@ export async function attachRecorder(page, { route, store, server, onSave }) {
         const file = await (onSave ?? defaultSave)(toShotYaml(shot), shot.id);
         shot.savedTo = path.relative(ROOT, file);
         shot.closeArmed = false;
+        // Saved, but flag the case this tool exists to prevent: a dialog or
+        // menu shot with nothing recorded to open it. Usually means the steps
+        // were taken while paused.
+        const realSteps = shot.steps.filter((s) => !('#navigated' in s.step));
+        if (TRANSIENT.has(shot.region) && !realSteps.length && !shot.openFirstRow) {
+          shot.warning = `Saved, but a "${shot.region}" shot with no steps cannot be replayed - nothing opens it. Were the steps taken while paused?`;
+        }
         break;
       }
       case 'done':

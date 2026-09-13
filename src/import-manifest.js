@@ -33,6 +33,32 @@ const NEEDS_CLIP = new Set(['nav-part', 'panel-part', 'modal-part', 'control', '
 /** Routes that are not reachable in the web client at all. */
 const NOT_A_ROUTE = new Set(['*', '-', 'dashboard', 'android']);
 
+/** Top-level nav sections, i.e. the `data-testid="nav-<section>"` buttons in the drawer. */
+const NAV_SECTIONS = new Set([
+  'dashboard', 'replenishment', 'inventory', 'distribution', 'dispensary',
+  'cold-chain', 'programs', 'reports', 'catalogue', 'manage', 'settings', 'help',
+]);
+
+/**
+ * Every annotated `nav` shot in the catalogue is "Nav drawer, Section > Item"
+ * with an arrow at the item for the shot's own route - so the annotation is
+ * derivable, not something a human has to place.
+ *
+ * Leaf items carry no test id, but the one for the current route is marked
+ * `data-selected="true"`, and the drawer auto-expands its section on that
+ * route. Top-level sections (Settings, Reports) are their own button and do
+ * have a test id. Routes that are not in the drawer at all (`sync` moved to
+ * the footer) return null and stay TODO.
+ */
+function navAnnotation(route) {
+  const [section, ...rest] = route.split('/');
+  if (!NAV_SECTIONS.has(section)) return null;
+  const to = rest.length
+    ? '[data-testid="drawer"] button[data-selected="true"]'
+    : `[data-testid="nav-${section}"]`;
+  return [{ type: 'arrow', to, from: 'above-right', length: 100 }];
+}
+
 /**
  * Which server and store a route needs.
  *
@@ -72,6 +98,7 @@ async function main() {
 
   const groups = new Map();
   let skipped = 0;
+  let derivedNav = 0;
 
   for (const s of manifest.shots) {
     const cls = classify(s.route);
@@ -90,7 +117,15 @@ async function main() {
     if (cls.store) shot.store = cls.store;
     if (openFirstRow) shot.openFirstRow = true;
     if (NEEDS_CLIP.has(s.region)) shot.clip = `TODO # ${s.description}`;
-    if (s.annotated) shot.annotate = `TODO # ${s.description}`;
+    if (s.annotated) {
+      const derived = s.region === 'nav' ? navAnnotation(route) : null;
+      if (derived) {
+        shot.annotate = derived;
+        derivedNav++;
+      } else {
+        shot.annotate = `TODO # ${s.description}`;
+      }
+    }
     shot['#'] = s.description;
 
     const g = groupOf(s.route);
@@ -122,6 +157,7 @@ async function main() {
   console.log(`  ${skipped} skipped (not a web-client screen)`);
   console.log(`  ${needClip} need a clip selector`);
   console.log(`  ${needAnnotate} need annotation coordinates`);
+  console.log(`  ${derivedNav} nav-drawer annotations derived automatically`);
 }
 
 main().catch((err) => {

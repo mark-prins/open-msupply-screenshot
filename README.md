@@ -155,14 +155,21 @@ yarn record manage/stores --server central
 ```
 
 Opens the app in a visible browser with a small authoring panel in the corner.
-It has four modes:
+**It starts recording immediately** — the actions you take to reach the screen
+are the shot's steps, so there is nothing to switch on first. The panel header
+is red while recording and grey when paused. Four modes:
 
 | Mode | What happens |
 |---|---|
-| **Record** | Use the app normally. Clicks become `click:` steps, typing becomes a single `fill:` per field, Enter becomes `press: Enter`. If a click opens a dialog or menu, the matching `waitFor:` is added for you. Clicking a table row that opens a record becomes `openFirstRow: true`. |
+| **Record** (default) | Use the app normally. Clicks become `click:` steps, typing becomes a single `fill:` per field, Enter becomes `press: Enter`. If a click opens a dialog or menu, the matching `waitFor:` is added for you. Clicking a table row that opens a record becomes `openFirstRow: true`. |
 | **Region** | Hover the page. Every capture region under the cursor is outlined and named — `region: modal`, `region: filter-bar` — smallest first. Anything that isn't a named region is offered as a `clip:` on that element. Click to choose. |
 | **Annotate** | Pick a type (arrow, ring, box, label, number) and, where relevant, a `from` direction. Click the element to anchor to. The preview is drawn by the **same code `yarn shoot` uses**, so it is exactly what will be captured. |
-| **Pause** | The app behaves normally and nothing is recorded — for getting into position. |
+| **Pause** | The app behaves normally and nothing is recorded — for actions you do *not* want replayed, like dismissing a banner or exploring. Anything done while paused is lost, so saving a dialog or menu shot with no steps produces a warning. |
+
+Keyboard shortcuts — `Ctrl+Alt+R` record, `G` region, `A` annotate, `P` pause,
+`S` save — do the same as the buttons. Use them while a dialog or menu is open:
+the panel moves inside an open dialog so clicking it is safe, but menus close
+on any outside click, and a key press doesn't count as one.
 
 **Save** writes `shots/recorded/<id>.yaml`; **Done** closes. The panel lists every
 step and annotation with a `×` to remove it, and shows the shot's YAML shape

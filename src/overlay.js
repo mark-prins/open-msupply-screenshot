@@ -19,7 +19,11 @@
 export function overlayMain(cfg) {
   const NS = 'http://www.w3.org/2000/svg';
   const ID = '__oms_rec';
-  let mode = 'pause';
+  // Record by default. The actions taken to reach the screen ARE the steps -
+  // starting paused meant everything done before someone found the Record
+  // button was silently lost. Pause is the opt-out for actions that should
+  // not be replayed (dismissing a banner, exploring).
+  let mode = 'record';
   let annType = 'arrow';
   let annFrom = 'below-left';
   let state = null;
@@ -323,7 +327,9 @@ export function overlayMain(cfg) {
     if (mode === 'record' && m !== 'record') flushFill();
     mode = m;
     hideHover();
-    render();
+    // Node remembers the mode, so a re-injected overlay after a navigation
+    // resumes recording instead of quietly dropping back to the default.
+    send({ type: 'ui', ui: { mode: m } });
   }
 
   /**
@@ -393,12 +399,20 @@ export function overlayMain(cfg) {
     const h = (t) => el('div', { style: { fontWeight: '600', margin: '10px 0 4px', color: '#9ab' } }, t);
     const code = (t, ok = true) => el('code', { style: { color: ok ? '#9fe3a5' : '#ff9c8a', wordBreak: 'break-all' } }, t);
 
+    // The header tells you at a glance whether what you do next is being kept.
+    const MODE_BADGE = {
+      record: { text: '● REC', bg: '#7a1f1f', fg: '#ffd6d6' },
+      region: { text: '▭ PICK REGION', bg: '#1f3f7a', fg: '#d6e4ff' },
+      annotate: { text: '➚ ANNOTATE', bg: '#7a4a1f', fg: '#ffe6d6' },
+      pause: { text: '❚❚ PAUSED — not recording', bg: '#444', fg: '#ddd' },
+    }[mode];
     bar.append(
       el('div', { onpointerdown: startDrag, title: 'Drag to move',
-        style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'move', userSelect: 'none', margin: '-4px -4px 4px', padding: '4px' } },
+        style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'move', userSelect: 'none',
+          margin: '-10px -10px 6px', padding: '8px 10px', borderRadius: '10px 10px 0 0', background: MODE_BADGE.bg, color: MODE_BADGE.fg } },
         el('strong', {}, '⠿ Screenshot recorder'),
         el('span', {},
-          el('span', { style: { color: '#9ab', marginRight: '8px' } }, mode.toUpperCase()),
+          el('span', { style: { marginRight: '8px', fontWeight: '600' } }, MODE_BADGE.text),
           btn(ui.collapsed ? '＋' : '－', () => send({ type: 'ui', ui: { collapsed: !ui.collapsed } }), false))),
     );
     if (ui.collapsed) return;
@@ -458,6 +472,7 @@ export function overlayMain(cfg) {
       row(btn('💾 Save shot', () => send({ type: 'save' }), true, '#2e8b57'),
         btn(s.closeArmed ? '⚠ Close and discard' : 'Close recorder', () => send({ type: 'done' }), false, s.closeArmed ? '#c0392b' : undefined)),
       s.savedTo ? row(el('span', { style: { color: '#9fe3a5' } }, 'saved → ' + s.savedTo)) : '',
+      s.warning ? row(el('span', { style: { color: '#ffd27a' } }, '⚠ ' + s.warning)) : '',
       s.error ? row(el('span', { style: { color: '#ff9c8a' } }, s.error)) : '');
   }
 
@@ -471,7 +486,12 @@ export function overlayMain(cfg) {
     window.addEventListener('mousemove', onMove, true);
     observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
     window.__oms = { setMode, setAnnotationType: (t) => { annType = t; }, setFrom: (d) => { annFrom = d; }, pickAt: (x, y) => pickRegion(x, y, controlFor(document.elementFromPoint(x, y))), selectorFor, getMode: () => mode };
-    window.__omsGetState().then((s) => { state = s; render(); if (s?.annotate?.length && window.__omsRender) window.__omsRender({ annotations: s.annotate, style: cfg.style }); });
+    window.__omsGetState().then((s) => {
+      state = s;
+      if (s?.ui?.mode) mode = s.ui.mode; // resume, e.g. after a navigation re-injected us
+      render();
+      if (s?.annotate?.length && window.__omsRender) window.__omsRender({ annotations: s.annotate, style: cfg.style });
+    });
   }
   if (document.body) boot();
   else document.addEventListener('DOMContentLoaded', boot, { once: true });

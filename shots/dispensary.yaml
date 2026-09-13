@@ -85,10 +85,20 @@ shots:
       - waitFor: 'dialog[open] [data-testid="table-row"]'
     '#': New patient wizard, step 2 Search results
   - id: patient-creation-detail
-    file: content/docs/dispensary/patients/images/patient_creation_detail.png
     route: dispensary/patients
-    region: modal
     store: STR-BDR-HCC
+    region: modal
+    steps:
+      - click: '[data-testid="new-patient-button"]'
+      - waitFor: dialog[open]
+      - fill:
+          selector: '[data-testid="input-firstName"]'
+          text: Crux
+      - fill:
+          selector: '[data-testid="input-lastName"]'
+          text: Flimberton
+      - click: '[data-testid="dialog-button-ok"]'
+      - click: '[data-testid="create-new-patient-button"]'
     '#': New patient wizard, step 3 Patient details form
   - id: fetch-patient-button
     file: content/docs/dispensary/patients/images/fetch_patient_button.png
