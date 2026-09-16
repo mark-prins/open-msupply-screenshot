@@ -12,19 +12,48 @@ import fs from 'node:fs/promises';
 import { REGIONS } from './regions.js';
 
 /**
- * Elements whose contents change between runs and would otherwise make every
- * capture differ. Masked with a solid block unless the shot is *about* them.
+ * Text that changes between runs and would otherwise make every capture
+ * differ - the footer's "Synced · just now" / "last synced 34 min ago".
+ *
+ * These are FROZEN to a fixed string, not masked. Playwright's `mask` paints
+ * the element a solid colour (default magenta), which is fine for visual
+ * regression tests and wrong for documentation. Freezing keeps the footer
+ * looking real while making the PNG byte-stable across re-shoots.
  */
-export const DEFAULT_MASKS = [
-  '[data-testid="footer-sync"]', // "Synced just now" / "last synced 34 min ago"
+export const DEFAULT_FREEZE = [
+  { selector: '[data-testid="footer-sync-details"]', text: 'just now' },
 ];
+
+/** Solid-colour masking is still available per shot via `masks:`; nothing is masked by default. */
+export const DEFAULT_MASKS = [];
+
+/**
+ * Runs in the page. Replaces volatile text under `selector` with `text`.
+ * If the element holds a single run of text, replace it outright; otherwise
+ * only replace the runs that look like relative times, so an icon or a
+ * static label sitting alongside is left alone.
+ */
+function freezeInPage(rules) {
+  const VOLATILE = /\b(just now|ago|\d{1,2}:\d{2}|\d+\s?(s|m|h|d|min|mins|minute|minutes|hour|hours|day|days))\b/i;
+  for (const { selector, text } of rules) {
+    for (const el of document.querySelectorAll(selector)) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const runs = [];
+      let n;
+      while ((n = walker.nextNode())) if (n.textContent.trim()) runs.push(n);
+      if (runs.length === 1) runs[0].textContent = text;
+      else for (const run of runs) if (VOLATILE.test(run.textContent)) run.textContent = text;
+    }
+  }
+}
 
 export async function capture(
   page,
-  { outFile, clipSelector, region, pad = 0, masks = [], fullPage = false }
+  { outFile, clipSelector, region, pad = 0, masks = [], freeze = [], fullPage = false }
 ) {
   await fs.mkdir(path.dirname(outFile), { recursive: true });
 
+  if (freeze.length) await page.evaluate(freezeInPage, freeze).catch(() => {});
   const maskLocators = masks.map((m) => page.locator(m));
 
   if (!clipSelector) {

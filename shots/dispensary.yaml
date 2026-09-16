@@ -98,47 +98,76 @@ shots:
           selector: '[data-testid="input-lastName"]'
           text: Flimberton
       - click: '[data-testid="dialog-button-ok"]'
+      - waitFor: 'dialog[open] [data-testid="table-row"]'
       - click: '[data-testid="create-new-patient-button"]'
     '#': New patient wizard, step 3 Patient details form
+  # 1 selector(s) below have no data-testid and may break when the layout changes.
   - id: fetch-patient-button
     file: content/docs/dispensary/patients/images/fetch_patient_button.png
     route: dispensary/patients
-    region: modal
     store: STR-BDR-HCC
-    annotate: 'TODO # Search results, fetch-from-central icon'
+    region: modal
+    steps:
+      - click: '[data-testid="new-patient-button"]'
+      - waitFor: dialog[open]
+      - fill:
+          selector: '[data-testid="input-firstName"]'
+          text: sch
+      - fill:
+          selector: '[data-testid="input-lastName"]'
+          text: fli
+      - click: '[data-testid="dialog-button-ok"]'
+      - waitFor: 'dialog[open] [data-testid="table-row"]'
+    annotate:
+      - type: ring
+        around: '[data-testid="cell-action"] > button'
     '#': Search results, fetch-from-central icon
-  - id: fetch-patient-row
-    file: content/docs/dispensary/patients/images/fetch_patient_row.png
-    route: dispensary/patients
-    region: modal
-    store: STR-BDR-HCC
-    '#': Search results row with fetch tooltip
   - id: fetch-patient-confirmation
     file: content/docs/dispensary/patients/images/fetch_patient_confirmation.png
     route: dispensary/patients
     region: modal
     store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-patient-button"]'
+      - waitFor: dialog[open]
+      - fill:
+          selector: '[data-testid="input-firstName"]'
+          text: sch
+      - fill:
+          selector: '[data-testid="input-lastName"]'
+          text: Fli
+      - click: '[data-testid="dialog-button-ok"]'
+      - waitFor: 'dialog[open] [data-testid="table-row"]'
+      - click: 'dialog[open] [data-testid="cell-firstName"]:text-is("Schendrik")'
+      - waitFor: dialog[open]
     '#': Patient Data Retrieval confirmation
-  - id: fetch-patient-done
-    file: content/docs/dispensary/patients/images/fetch_patient_done.png
-    route: dispensary/patients
-    region: modal
-    store: STR-BDR-HCC
-    '#': Patient Data Retrieval complete, View patient
+  # - id: fetch-patient-done
+  #   file: content/docs/dispensary/patients/images/fetch_patient_done.png
+  #   route: dispensary/patients
+  #   region: modal
+  #   store: STR-BDR-HCC
+  #   '#': Patient Data Retrieval complete, View patient
   - id: insurance-list-view
     file: content/docs/dispensary/patients/images/insurance_list_view.png
     route: dispensary/patients
     region: content
     store: STR-BDR-HCC
-    openFirstRow: true
+    steps:
+      - click: '[data-testid="cell-firstName"]:text-is("Spurge")'
+      - waitFor: 'button[data-testid="tab-insurance"]'
+      - click: '[data-testid="tab-insurance"]'
     '#': Patient detail, Insurance tab list
   - id: insurance-add-button
     file: content/docs/dispensary/patients/images/insurance_add_button.png
     route: dispensary/patients
-    region: control
     store: STR-BDR-HCC
-    openFirstRow: true
-    clip: 'TODO # Add Insurance button (zoomed)'
+    region: control
+    steps:
+      - click: '[data-testid="cell-firstName"]:text-is("Spurge")'
+      - waitFor: 'button[data-testid="tab-insurance"]'
+      - click: '[data-testid="tab-insurance"]'
+      - waitFor: '[data-testid="add-insurance-header-button"]'
+    clip: '[data-testid="add-insurance-header-button"]'
     '#': Add Insurance button (zoomed)
   - id: insurance-empty-modal
     file: content/docs/dispensary/patients/images/insurance_empty_modal.png

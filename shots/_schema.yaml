@@ -76,10 +76,13 @@ shots: []
 #               `from` is one of: left right above below above-left above-right
 #               below-left below-right
 #
-# masks         selectors to black out. Defaults to the sync status, whose
-#               "Synced just now" text changes every run.
-# noMask        true to disable the default masks - use when the shot is *of*
-#               the footer sync widget.
+# freeze        [{selector, text}] - replace volatile text before capture.
+#               Defaults to pinning the footer sync time to "just now" so the
+#               PNG is stable across runs while still looking real.
+# noFreeze      true to keep the live text - use when the shot is *of* the
+#               footer sync widget.
+# masks         selectors to paint over with a solid block (Playwright mask,
+#               magenta). Off by default; for diffing, not for docs.
 #
 # capture       set to "manual" to skip: photos, diagrams, icon assets, the
 #               Android app, legacy mSupply desktop, mSupply Dashboard.

@@ -24,7 +24,7 @@ import YAML from 'yaml';
 import { launch, login, resolveStore, listStores, setLanguage, gotoRoute, clearOverlays, DOC_LANGUAGES } from './session.js';
 import { REGIONS, SKIP_REGIONS, resolveClip } from './regions.js';
 import { runSteps, openFirstRow } from './steps.js';
-import { capture, outputPath, DEFAULT_MASKS } from './capture.js';
+import { capture, outputPath, DEFAULT_MASKS, DEFAULT_FREEZE } from './capture.js';
 import { drawAnnotations, clearAnnotations } from './annotate.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -249,6 +249,7 @@ async function main() {
             region: shot.region,
             pad: shot.pad ?? (Array.isArray(shot.annotate) ? 24 : 0),
             masks: shot.masks ?? (shot.noMask ? [] : DEFAULT_MASKS),
+            freeze: shot.freeze ?? (shot.noFreeze ? [] : DEFAULT_FREEZE),
             fullPage: shot.fullPage ?? false,
           });
 

@@ -220,6 +220,30 @@ When a region isn't found the error says which of these applies.
 `pad` widens the crop; it defaults to 24px when a shot has annotations so a ring
 drawn just outside a button is not sliced off.
 
+### Targeting one cell, one row
+
+`[data-testid="cell-firstName"]` matches every row. To pick one, `clip:` and
+the annotation anchors (`to:`, `around:`, `at:`) all accept Playwright's
+selector extensions, so three shapes are available:
+
+```yaml
+# by position - simplest, wrong row if the data or sort changes
+clip: '[data-testid="table-row"]:nth-child(2) [data-testid="cell-firstName"]'
+
+# by the cell's content
+clip: '[data-testid="cell-firstName"]:text-is("Schendrik")'
+
+# by a stable identifier elsewhere in the same row - usually the right one
+clip: '[data-testid="table-row"]:has([data-testid="cell-code"]:text-is("PT001")) [data-testid="cell-firstName"]'
+```
+
+The "never match on text" rule is about **UI labels**, which are translated.
+Record **data** — a patient name, an item code — is the same in every
+language, so matching on it is language-safe. Its weakness is different: it
+breaks when the demo database is refreshed and that record is gone. Anchoring
+on an identifier column (the third form) survives re-sorting and edits and only
+breaks if the record itself is deleted.
+
 ## Arrows and callouts
 
 Annotations are **not** baked into the PNG by hand. Each one is anchored to a
@@ -315,9 +339,13 @@ runner resolves the id from the store code. Which store matters:
   documented screenshots.
 - Animations and transitions disabled, caret hidden.
 - Locale pinned to `en-GB`, timezone to `Pacific/Auckland`, so dates are stable.
-- `[data-testid="footer-sync"]` is masked by default — it renders "Synced just
-  now" / "last synced 34 min ago" and would otherwise differ every run. Set
-  `noMask: true` on shots that are *of* the sync widget.
+- The footer's sync time ("just now" / "last synced 34 min ago") is **frozen**
+  to `just now` before capture, so it looks real but the PNG doesn't change
+  every run. Set `noFreeze: true` on shots that are *of* the sync widget, or
+  override with your own `freeze: [{selector, text}]` list.
+- Solid-colour masking (`masks: [...]`) is still available per shot, but
+  nothing is masked by default: Playwright paints masked elements magenta,
+  which is right for visual-regression tests and wrong for documentation.
 - `clearOverlays` dismisses the unexpected-error modal and the "A new version is
   available" stale-bundle modal, both of which appear unprompted on the demos.
 

@@ -242,13 +242,82 @@ export function renderAnnotations({ annotations, style }) {
       }
 }
 
+const ANCHOR_KEYS = ['to', 'around', 'at'];
+const ANCHOR_ATTR = 'data-oms-anchor';
+
+/** Which anchor key each annotation type requires. */
+const REQUIRED_ANCHOR = { arrow: 'to', ring: 'around', box: 'around', label: 'at', number: 'at' };
+
+/**
+ * Check the list's shape before touching the page, so a YAML slip reads as
+ * "you wrote it wrong" rather than "anchor not found: undefined".
+ *
+ * The classic slip is a dash on every line -
+ *   - type: arrow
+ *   - to: '...'
+ * - which YAML reads as separate one-key annotations. Detect that pattern
+ * specifically and say how to fix it.
+ */
+export function validateAnnotations(annotations) {
+  if (!Array.isArray(annotations)) {
+    throw new Error(`annotate must be a list, got ${JSON.stringify(annotations)}`);
+  }
+  const singleKeyed = annotations.filter((a) => a && typeof a === 'object' && Object.keys(a).length === 1);
+  if (annotations.length > 1 && singleKeyed.length === annotations.length) {
+    throw new Error(
+      'annotate: every item has exactly one key - it looks like each property was written as its own ' +
+        'list item. Only the first line of an annotation takes a dash; indent the rest under it:\n' +
+        "  - type: arrow\n    to: '[data-testid=\"...\"]'\n    from: left\n    length: 100"
+    );
+  }
+  annotations.forEach((a, i) => {
+    const n = `Annotation ${i + 1}`;
+    if (!a || typeof a !== 'object') throw new Error(`${n}: expected a mapping, got ${JSON.stringify(a)}`);
+    const need = REQUIRED_ANCHOR[a.type];
+    if (!need) {
+      throw new Error(`${n}: unknown type ${JSON.stringify(a.type)}; use one of ${Object.keys(REQUIRED_ANCHOR).join(', ')}`);
+    }
+    if (typeof a[need] !== 'string' || !a[need].trim()) {
+      throw new Error(`${n} (${a.type}): needs "${need}: '<selector>'", got ${JSON.stringify(a)}`);
+    }
+  });
+}
+
+/**
+ * Anchors are resolved HERE, with Playwright, not in the page with
+ * querySelector. That lets a shot anchor on Playwright-only selectors -
+ * `[data-testid="cell-firstName"]:text-is("Schendrik")`,
+ * `tr:has([data-testid="cell-code"]:text-is("PT001")) td` - exactly as `clip:`
+ * already can. The matched element is tagged with a temporary attribute and
+ * the renderer is handed that instead, so the in-page code stays plain CSS.
+ */
 export async function drawAnnotations(page, annotations, style = {}) {
   if (!annotations?.length) return;
-  await page.evaluate(renderAnnotations, { annotations, style: { ...DEFAULT_STYLE, ...style } });
+  validateAnnotations(annotations);
+  const resolved = [];
+  for (const [i, a] of annotations.entries()) {
+    const out = { ...a };
+    for (const key of ANCHOR_KEYS) {
+      if (!a[key]) continue;
+      const locator = page.locator(a[key]).first();
+      try {
+        await locator.waitFor({ state: 'visible', timeout: 5000 });
+      } catch {
+        throw new Error(`Annotation ${i + 1} (${a.type}): anchor not visible: ${a[key]}`);
+      }
+      await locator.evaluate((el, idx) => el.setAttribute('data-oms-anchor', String(idx)), i);
+      out[key] = `[${ANCHOR_ATTR}="${i}"]`;
+    }
+    resolved.push(out);
+  }
+  await page.evaluate(renderAnnotations, { annotations: resolved, style: { ...DEFAULT_STYLE, ...style } });
 }
 
 export async function clearAnnotations(page) {
   await page
-    .evaluate(() => document.getElementById('__oms_shot_overlay__')?.remove())
+    .evaluate((attr) => {
+      document.getElementById('__oms_shot_overlay__')?.remove();
+      document.querySelectorAll(`[${attr}]`).forEach((el) => el.removeAttribute(attr));
+    }, ANCHOR_ATTR)
     .catch(() => {});
 }
