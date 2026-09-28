@@ -174,44 +174,56 @@ shots:
     route: dispensary/patients
     region: modal
     store: STR-BDR-HCC
-    openFirstRow: true
+    steps:
+      - click: '[data-testid="cell-firstName"]:text-is("Spurge")'
+      - waitFor: 'button[data-testid="tab-insurance"]'
+      - click: '[data-testid="tab-insurance"]'
+      - waitFor: '[data-testid="add-insurance-header-button"]'
+      - click: '[data-testid="add-insurance-header-button"]'
+      - waitFor: dialog[open]
     '#': New insurance policy, empty
-  - id: insurance-success
-    file: content/docs/dispensary/patients/images/insurance_success.png
-    route: dispensary/patients
-    region: toast
-    store: STR-BDR-HCC
-    openFirstRow: true
-    '#': '"Insurance created successfully" snackbar'
   - id: insurance-failed-to-save
     file: content/docs/dispensary/patients/images/insurance_failed_to_save.png
     route: dispensary/patients
-    region: content
+    region: modal
     store: STR-BDR-HCC
-    openFirstRow: true
+    steps:
+      - click: '[data-testid="cell-firstName"]:text-is("Spurge")'
+      - waitFor: 'button[data-testid="tab-insurance"]'
+      - click: '[data-testid="tab-insurance"]'
+      - waitFor: '[data-testid="cell-policyNumber"]'
+      - click: '[data-testid="cell-policyNumber"]'
+      - waitFor: dialog[open]
+      - fill:
+          selector: '[data-testid="insurance-modal"] > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > input'
+          text: ''
+      - click: '[data-testid="dialog-button-ok"]'
     '#': Validation error banner at footer with modal open
   - id: insurance-row-select
     file: content/docs/dispensary/patients/images/insurance_row_select.png
     route: dispensary/patients
     region: content-part
     store: STR-BDR-HCC
-    openFirstRow: true
-    clip: 'TODO # Insurance list row being selected'
+    steps:
+      - click: '[data-testid="cell-firstName"]:text-is("Spurge")'
+      - waitFor: 'button[data-testid="tab-insurance"]'
+      - click: '[data-testid="tab-insurance"]'
+      - waitFor: '[data-testid="cell-policyNumber"]'
+    clip: 'table'
     '#': Insurance list row being selected
   - id: insurance-filled-modal
     file: content/docs/dispensary/patients/images/insurance_filled_modal.png
     route: dispensary/patients
     region: modal
     store: STR-BDR-HCC
-    openFirstRow: true
+    steps:
+      - click: '[data-testid="cell-firstName"]:text-is("Spurge")'
+      - waitFor: 'button[data-testid="tab-insurance"]'
+      - click: '[data-testid="tab-insurance"]'
+      - waitFor: '[data-testid="cell-policyNumber"]'
+      - click: '[data-testid="cell-policyNumber"]'
+      - waitFor: dialog[open]
     '#': Insurance policy modal, pre-filled
-  - id: insurance-edit-modal
-    file: content/docs/dispensary/patients/images/insurance_edit_modal.png
-    route: dispensary/patients
-    region: modal
-    store: STR-BDR-HCC
-    openFirstRow: true
-    '#': Insurance modal, Provider name dropdown open
   - id: goto-prescriptions
     file: content/docs/dispensary/prescriptions/images/goto_prescriptions.png
     route: dispensary/prescription
@@ -226,52 +238,84 @@ shots:
   - id: prescription-filters
     file: content/docs/dispensary/prescriptions/images/prescription_filters.png
     route: dispensary/prescription
-    region: content-top
+    region: filter-bar
     store: STR-BDR-HCC
     '#': Prescription Filters dropdown open
   - id: prescription-delete-step-1
     file: content/docs/dispensary/prescriptions/images/prescription_delete_step_1.png
     route: dispensary/prescription
-    region: full
+    region: content
     store: STR-BDR-HCC
-    annotate: 'TODO # Rows selected, Delete in bulk-action bar'
+    steps:
+      - click: '[data-testid="select-row-checkbox"]'
+      - waitFor: '[data-testid="delete-lines-button"]'
+    annotate:
+      - type: arrow
+        to: '[data-testid="delete-lines-button"]'
+        from: above-right
+        length: 100
     '#': Rows selected, Delete in bulk-action bar
   - id: prescription-delete-step-2
     file: content/docs/dispensary/prescriptions/images/prescription_delete_step_2.png
     route: dispensary/prescription
-    region: full
+    region: modal
     store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="select-row-checkbox"]'
+      - waitFor: '[data-testid="delete-lines-button"]'
+      - click: '[data-testid="delete-lines-button"]'
+      - waitFor: dialog[open]
     '#': Delete confirmation dialog
-  - id: prescription-delete-step-3
-    file: content/docs/dispensary/prescriptions/images/prescription_delete_step_3.png
-    route: dispensary/prescription
-    region: full
-    store: STR-BDR-HCC
-    '#': '"Deleted 2 prescriptions" snackbar'
   - id: click-new-prescription
     file: content/docs/dispensary/prescriptions/images/click_new_prescription.png
     route: dispensary/prescription
-    region: content
+    region: content-top
     store: STR-BDR-HCC
-    annotate: 'TODO # New Prescription button'
+    annotate:
+      - type: arrow
+        to: '[data-testid="new-prescription-button"]'
+        from: below-left
+        length: 100
     '#': New Prescription button
   - id: prescription-new-prescription-name
     file: content/docs/dispensary/prescriptions/images/prescription_new_prescription_name.png
     route: dispensary/prescription
     region: modal
     store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-prescription-button"]'
+      - waitFor: dialog[open]
+      - fill:
+          selector: '[data-testid="patient-search-input"]'
+          text: 'flim'
+      - waitFor: '[data-testid="item-option-code"]:has-text("CF-0711")'
     '#': Create Prescription dialog, patient selected
   - id: prescription-new-prescription-no-match
     file: content/docs/dispensary/prescriptions/images/prescription_new_prescription_no_match.png
     route: dispensary/prescription
     region: modal
     store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-prescription-button"]'
+      - waitFor: dialog[open]
+      - fill:
+          selector: '[data-testid="patient-search-input"]'
+          text: 'flum'
+      - networkIdle: true
     '#': Create Prescription, New Patient option
   - id: prescription-new-prescription-create-patient
     file: content/docs/dispensary/prescriptions/images/prescription_new_prescription_create_patient.png
     route: dispensary/prescription
-    region: modal
+    region: content
     store: STR-BDR-HCC
+    steps:
+      - click: '[data-testid="new-prescription-button"]'
+      - waitFor: dialog[open]
+      - fill:
+          selector: '[data-testid="patient-search-input"]'
+          text: 'flum'
+      - click: '[data-testid="create-patient-button"]'
+      - waitFor: '[data-testid="input-firstName"]'
     '#': Create patient wizard from prescription
   - id: prescription-change-patient-step-1
     file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_1.png

@@ -263,11 +263,10 @@ export function overlayMain(cfg) {
     if (annType === 'ring' || annType === 'box') a.around = selector;
     if (annType === 'label') Object.assign(a, { at: selector, from: annFrom });
     if (annType === 'number') Object.assign(a, { at: selector, from: annFrom, index: (state?.annotate?.length ?? 0) + 1 });
-    if (annType === 'arrow' || annType === 'label') {
-      const text = window.prompt(annType === 'label' ? 'Label text:' : 'Caption at the arrow tail (blank for none):', '');
-      if (text === null) return;
-      if (text) a.text = text;
-    }
+    // No window.prompt() for the caption: Playwright auto-dismisses native
+    // dialogs, so prompt() returned null and the annotation was silently
+    // dropped. Save immediately; captions are edited inline in the panel.
+    if (annType === 'label') a.text = 'Label';
     send({ type: 'annotation', annotation: a, stable });
   }
 
@@ -307,8 +306,11 @@ export function overlayMain(cfg) {
     const dy = e.clientY - r.top;
     bar.style.right = 'auto';
     const move = (ev) => {
+      // Keep the WHOLE panel on screen, not just its header, so nothing in it
+      // can be dragged out of reach. A panel taller than the viewport pins to
+      // the top and scrolls internally.
       const x = Math.max(0, Math.min(innerWidth - r.width, ev.clientX - dx));
-      const y = Math.max(0, Math.min(innerHeight - 40, ev.clientY - dy));
+      const y = Math.max(0, Math.min(Math.max(0, innerHeight - r.height), ev.clientY - dy));
       bar.style.left = x + 'px';
       bar.style.top = y + 'px';
     };
@@ -434,6 +436,17 @@ export function overlayMain(cfg) {
         'Keys: Ctrl+Alt+R record · G region · A annotate · P pause · S save — use these while a menu or dialog is open')),
     );
 
+    // Save / Close live up here, not at the foot of the panel: once a session
+    // has a few steps and annotations the panel is taller than the viewport,
+    // and buttons at the bottom of a scrolling panel are easy to lose.
+    bar.append(
+      row(btn('💾 Save shot', () => send({ type: 'save' }), true, '#2e8b57'),
+        btn(s.closeArmed ? '⚠ Close and discard' : 'Close recorder', () => send({ type: 'done' }), false, s.closeArmed ? '#c0392b' : undefined)),
+      s.savedTo ? row(el('span', { style: { color: '#9fe3a5' } }, 'saved → ' + s.savedTo)) : '',
+      s.warning ? row(el('span', { style: { color: '#ffd27a' } }, '⚠ ' + s.warning)) : '',
+      s.error ? row(el('span', { style: { color: '#ff9c8a' } }, s.error)) : '',
+    );
+
     bar.append(h('Shot'),
       row(el('label', {}, 'id ', el('input', { value: s.id || '', placeholder: 'e.g. patient-search',
         oninput: (e) => { clearTimeout(bar._t); bar._t = setTimeout(() => send({ type: 'id', id: e.target.value }), 400); },
@@ -464,16 +477,26 @@ export function overlayMain(cfg) {
       }
       bar.append(row(el('em', { style: { color: '#888' } }, 'now click the element to anchor to')));
     }
-    (s.annotate || []).forEach((a, i) => bar.append(row(
-      btn('×', () => send({ type: 'removeAnnotation', index: i }), false),
-      code(JSON.stringify(a)))));
+    const field = (attrs) => el('input', { ...attrs, style: { font: 'inherit', background: '#0f1216', color: '#fff', border: '1px solid #444', borderRadius: '4px', padding: '2px 6px', marginTop: '3px', ...(attrs.style || {}) } });
+    const patch = (i, p) => send({ type: 'updateAnnotation', index: i, patch: p });
+    (s.annotate || []).forEach((a, i) => {
+      const extras = [];
+      if (a.type === 'arrow' || a.type === 'label') {
+        extras.push(field({ 'data-ann': String(i), value: a.text || '', placeholder: a.type === 'label' ? 'label text' : 'caption at arrow tail (optional)',
+          style: { width: '230px' },
+          onchange: (e) => patch(i, { text: e.target.value }),
+          onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); } }));
+      }
+      if (a.type === 'arrow') {
+        extras.push(el('span', { style: { color: '#9ab', marginLeft: '6px' } }, ' len '),
+          field({ type: 'number', value: a.length ?? 110, style: { width: '56px' }, onchange: (e) => patch(i, { length: Number(e.target.value) }) }));
+      }
+      bar.append(row(
+        btn('×', () => send({ type: 'removeAnnotation', index: i }), false),
+        code(JSON.stringify(a)),
+        ...(extras.length ? [el('div', {}, ...extras)] : [])));
+    });
 
-    bar.append(h('Output'),
-      row(btn('💾 Save shot', () => send({ type: 'save' }), true, '#2e8b57'),
-        btn(s.closeArmed ? '⚠ Close and discard' : 'Close recorder', () => send({ type: 'done' }), false, s.closeArmed ? '#c0392b' : undefined)),
-      s.savedTo ? row(el('span', { style: { color: '#9fe3a5' } }, 'saved → ' + s.savedTo)) : '',
-      s.warning ? row(el('span', { style: { color: '#ffd27a' } }, '⚠ ' + s.warning)) : '',
-      s.error ? row(el('span', { style: { color: '#ff9c8a' } }, s.error)) : '');
   }
 
   // -------------------------------------------------------------------- boot

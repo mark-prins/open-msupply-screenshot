@@ -163,7 +163,7 @@ is red while recording and grey when paused. Four modes:
 |---|---|
 | **Record** (default) | Use the app normally. Clicks become `click:` steps, typing becomes a single `fill:` per field, Enter becomes `press: Enter`. If a click opens a dialog or menu, the matching `waitFor:` is added for you. Clicking a table row that opens a record becomes `openFirstRow: true`. |
 | **Region** | Hover the page. Every capture region under the cursor is outlined and named — `region: modal`, `region: filter-bar` — smallest first. Anything that isn't a named region is offered as a `clip:` on that element. Click to choose. |
-| **Annotate** | Pick a type (arrow, ring, box, label, number) and, where relevant, a `from` direction. Click the element to anchor to. The preview is drawn by the **same code `yarn shoot` uses**, so it is exactly what will be captured. |
+| **Annotate** | Pick a type (arrow, ring, box, label, number) and, where relevant, a `from` direction. Click the element to anchor to — the annotation is saved on the click. Arrow captions, label text and arrow length are edited in the panel's annotation list afterwards. The preview is drawn by the **same code `yarn shoot` uses**, so it is exactly what will be captured. |
 | **Pause** | The app behaves normally and nothing is recorded — for actions you do *not* want replayed, like dismissing a banner or exploring. Anything done while paused is lost, so saving a dialog or menu shot with no steps produces a warning. |
 
 Keyboard shortcuts — `Ctrl+Alt+R` record, `G` region, `A` annotate, `P` pause,

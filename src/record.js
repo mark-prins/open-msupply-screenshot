@@ -99,6 +99,13 @@ export async function attachRecorder(page, { route, store, server, onSave }) {
       case 'removeAnnotation':
         shot.annotate.splice(evt.index, 1);
         break;
+      case 'updateAnnotation': {
+        const a = shot.annotate[evt.index];
+        if (!a) { shot.error = `No annotation ${evt.index + 1}`; break; }
+        Object.assign(a, evt.patch);
+        if ('text' in evt.patch && !String(evt.patch.text ?? '').trim()) delete a.text; // empty caption = no caption
+        break;
+      }
       case 'ui':
         shot.ui = { ...shot.ui, ...evt.ui };
         break;

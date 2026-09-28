@@ -12,6 +12,7 @@
     "stores": "node src/index.js stores",
     "import-manifest": "node src/import-manifest.js",
     "record": "node src/record.js",
+    "test": "node test/recorder.test.mjs",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {
