@@ -119,9 +119,14 @@ export const REGIONS = {
     description: 'One panel section. Supply `clip` per shot.',
   },
 
-  /** Every modal in the new client is a native <dialog>. */
+  /**
+   * Every modal in the new client is a native <dialog>. A modal opened from
+   * inside another one is rendered NESTED in it (e.g. New prescription ->
+   * patient search -> Create patient), so plain `dialog[open]` + `.first()`
+   * picks the outer, smaller dialog. Take the innermost open one instead.
+   */
   modal: {
-    selector: 'dialog[open]',
+    selector: 'dialog[open]:not(:has(dialog[open]))',
     description: 'An open dialog.',
   },
 
