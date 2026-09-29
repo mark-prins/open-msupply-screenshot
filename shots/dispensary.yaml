@@ -306,7 +306,7 @@ shots:
   - id: prescription-new-prescription-create-patient
     file: content/docs/dispensary/prescriptions/images/prescription_new_prescription_create_patient.png
     route: dispensary/prescription
-    region: content
+    region: modal
     store: STR-BDR-HCC
     steps:
       - click: '[data-testid="new-prescription-button"]'
@@ -320,31 +320,70 @@ shots:
   - id: prescription-change-patient-step-1
     file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_1.png
     route: dispensary/prescription
-    region: detail-header
+    region: content-top
     store: STR-BDR-HCC
     openFirstRow: true
+    annotate:
+      - type: box
+        around: div:nth-of-type(1) > div > div > div > div > div > div:nth-of-type(1) > header >
+          div:nth-of-type(2) > div > div > div:nth-of-type(1) > div
     '#': 'Prescription header: Patient, Clinician, Date'
   - id: prescription-change-patient-step-2
     file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_2.png
     route: dispensary/prescription
-    region: detail-header
+    region: content
     store: STR-BDR-HCC
     openFirstRow: true
+    steps:
+      - fill:
+          selector: '[data-testid="patient-search-input"]'
+          text: cr
+      - press: Enter
+      - waitFor: '[data-testid="item-option-code"]'
     '#': Header, Patient dropdown open
   - id: prescription-change-patient-step-3
     file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_3.png
     route: dispensary/prescription
-    region: detail-header
+    region: content-top
     store: STR-BDR-HCC
     openFirstRow: true
+    steps:
+      - fill:
+          selector: '[data-testid="patient-search-input"]'
+          text: Snor
+      - waitFor: '[data-testid="item-option-code"]'
+      - click: '[data-testid="item-option-code"]'
+      - wait: 300
+    annotate:
+      - type: box
+        around: div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > header >
+          div:nth-of-type(2) > div > div > div:nth-of-type(1) > div
+    '#': Header, patient changed
+  - id: prescription-change-patient-step-4
+    file: content/docs/dispensary/prescriptions/images/prescription_change_patient_step_4.png
+    route: dispensary/prescription
+    region: content-top
+    store: STR-BDR-HCC
+    openFirstRow: true
+    steps:
+      - fill:
+          selector: '[data-testid="patient-search-input"]'
+          text: Oswyn
+      - waitFor: '[data-testid="item-option-code"]'
+      - click: '[data-testid="item-option-code"]'
+      - wait: 300
     '#': Header, patient changed
   - id: prescription-edit-patient-step-1
     file: content/docs/dispensary/prescriptions/images/prescription_edit_patient_step_1.png
     route: dispensary/prescription
-    region: detail-header
     store: STR-BDR-HCC
     openFirstRow: true
-    annotate: 'TODO # Header, edit-patient pencil icon'
+    region: content-top
+    annotate:
+      - type: arrow
+        to: '[data-testid="edit-patient-button"]'
+        from: below-left
+        length: 50
     '#': Header, edit-patient pencil icon
   - id: prescription-edit-patient-step-2
     file: content/docs/dispensary/prescriptions/images/prescription_edit_patient_step_2.png
@@ -352,6 +391,9 @@ shots:
     region: modal
     store: STR-BDR-HCC
     openFirstRow: true
+    steps:
+      - click: '[data-testid="edit-patient-button"]'
+      - waitFor: dialog[open]
     '#': Patient details edit form
   - id: clinicians-search-new-prescription
     file: content/docs/dispensary/prescriptions/images/clinicians_search_new_prescription.png
