@@ -11,6 +11,7 @@
  *   yarn shoot --lang en              English only
  *   yarn shoot --only outbound        shots whose id contains "outbound"
  *   yarn shoot --tag replenishment    shots carrying a tag
+ *   yarn shoot --file shots/dispensary.yaml   only the shots in one file
  *   yarn shoot --headed               watch it run
  *   yarn shoot --in-place             write over the files in the docs repo
  *   yarn stores                       list store codes on the server
@@ -39,6 +40,8 @@ function parseArgs(argv) {
     else if (a === '--lang') args.lang = argv[++i];
     else if (a === '--only') args.only = argv[++i];
     else if (a === '--tag') args.tag = argv[++i];
+    else if (a === '--file') args.file = argv[++i];
+    else if (/\.ya?ml$/.test(a) && !a.startsWith('-')) args.file = a;
     else if (a === '--out-dir') args.outDir = argv[++i];
     else if (a === '--config') args.config = argv[++i];
   }
@@ -68,12 +71,29 @@ async function loadShots(dir, base = dir) {
       continue;
     }
     if (!/\.ya?ml$/.test(entry.name) || entry.name.startsWith('_')) continue;
-    const doc = YAML.parse(await fs.readFile(full, 'utf8'));
-    for (const shot of doc.shots ?? []) {
-      shots.push({ ...doc.defaults, ...shot, source: path.relative(base, full) });
-    }
+    shots.push(...(await loadShotFile(full, base)));
   }
   return shots;
+}
+
+/** The shots in one YAML definition file, with its `defaults` applied. */
+async function loadShotFile(file, base) {
+  const doc = YAML.parse(await fs.readFile(file, 'utf8')) ?? {};
+  return (doc.shots ?? []).map((shot) => ({ ...doc.defaults, ...shot, source: path.relative(base, file) }));
+}
+
+/**
+ * Resolve a --file argument: as given (relative to the working directory),
+ * then relative to the repo root, then to shots/, so `--file dispensary.yaml`,
+ * `--file shots/dispensary.yaml` and an absolute path all work.
+ */
+async function resolveShotFile(file) {
+  const candidates = [path.resolve(file), path.resolve(ROOT, file), path.resolve(ROOT, 'shots', file)];
+  for (const candidate of candidates) {
+    const stat = await fs.stat(candidate).catch(() => null);
+    if (stat?.isFile()) return candidate;
+  }
+  throw new Error(`Shot file not found: ${file}`);
 }
 
 /**
@@ -108,7 +128,18 @@ async function main() {
   const outDir = args.outDir ?? path.join(ROOT, 'images');
   const languages = args.lang ? [args.lang] : cfg.languages ?? DOC_LANGUAGES;
 
-  const all = dedupe(await loadShots(path.join(ROOT, 'shots')));
+  const shotsDir = path.join(ROOT, 'shots');
+  let all;
+  if (args.file) {
+    const file = await resolveShotFile(args.file).catch((err) => console.error(err.message));
+    if (!file) {
+      process.exitCode = 1;
+      return;
+    }
+    all = await loadShotFile(file, shotsDir);
+  } else {
+    all = dedupe(await loadShots(shotsDir));
+  }
   let shots = all;
   if (args.only) shots = shots.filter((s) => s.id.includes(args.only) || s.source.includes(args.only));
   if (args.tag) shots = shots.filter((s) => (s.tags ?? []).includes(args.tag));
@@ -139,8 +170,12 @@ async function main() {
   // Fail fast and clearly rather than launching a browser and logging in to
   // discover there is nothing to do.
   if (!matched) {
-    const filter = args.only ? `--only ${args.only}` : args.tag ? `--tag ${args.tag}` : 'no filter';
-    console.error(`No shots matched (${filter}). ${all.length} shots are defined; try \`yarn shot-list\`.`);
+    const filter =
+      [args.file && `--file ${args.file}`, args.only && `--only ${args.only}`, args.tag && `--tag ${args.tag}`]
+        .filter(Boolean)
+        .join(' ') || 'no filter';
+    const where = args.file ? ` in ${args.file}` : '';
+    console.error(`No shots matched (${filter}). ${all.length} shots are defined${where}; try \`yarn shot-list\`.`);
     process.exitCode = 1;
     return;
   }

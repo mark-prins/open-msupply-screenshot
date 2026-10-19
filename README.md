@@ -31,6 +31,7 @@ password.
 | `yarn shoot --lang fr` | one language |
 | `yarn shoot --only outbound` | shots whose id contains a string |
 | `yarn shoot --tag replenishment` | shots carrying a tag |
+| `yarn shoot --file shots/dispensary.yaml` | only the shots in one definition file (also `yarn shoot dispensary.yaml`); combines with `--only`, `--tag`, `--lang` |
 | `yarn shoot --headed` | watch the browser |
 | `yarn shoot --in-place` | write over the images in the docs repo (English only) |
 | `yarn shot-list` | print the shot list without running |
